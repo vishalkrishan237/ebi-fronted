@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useEffect, useState } from "react";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -215,7 +215,7 @@ function MatchesSection() {
   const [confirmEnd, setConfirmEnd] = useState<number | null>(null);
 
   const createForm = useForm({
-    resolver: zodResolver(CreateMatchBody),
+    resolver: zodResolver(CreateMatchBodySchema),
     defaultValues: {
       name: "",
       type: "free" as "free" | "paid",
@@ -426,7 +426,7 @@ function EditMatchDialog({ matchId, onClose }: { matchId: number; onClose: () =>
   const { toast } = useToast();
 
   const form = useForm({
-    resolver: zodResolver(UpdateMatchBody),
+    resolver: zodResolver(UpdateMatchBodySchema),
     values: match
       ? {
           name: match.name,
@@ -519,7 +519,7 @@ function UsersSection() {
   });
 
   // Debounce search
-  useMemo(() => {
+  useEffect(() => {
     const t = setTimeout(() => setDebounced(search), 300);
     return () => clearTimeout(t);
   }, [search]);
@@ -574,7 +574,7 @@ function UserDetailDialog({ userId, onClose }: { userId: number; onClose: () => 
   const { toast } = useToast();
 
   const adjustForm = useForm({
-    resolver: zodResolver(AdjustUserCoinsBody),
+    resolver: zodResolver(AdjustUserCoinsBodySchema),
     defaultValues: { amount: 0, reason: "" },
   });
 
@@ -698,7 +698,7 @@ function ResultsSection() {
   });
 
   const form = useForm({
-    resolver: zodResolver(DeclareWinnerBody),
+    resolver: zodResolver(DeclareWinnerBodySchema),
     defaultValues: { winnerUserId: undefined as any },
   });
 
