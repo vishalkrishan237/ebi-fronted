@@ -1,14 +1,14 @@
-import React, { useMemo, useState } from "react";
+import React, { useState } from "react";
 import { useParams, Link } from "wouter";
 import { useGetMatch, useJoinMatch, useGetMe, getGetMatchQueryKey, getGetMeQueryKey, getListMatchesQueryKey, getGetProfileQueryKey, getGetRewardsQueryKey } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
-import { useJoinSquadMatch, useRegisterSquadMatch } from "@/lib/platform-api";
+import { useRegisterSquadMatch } from "@/lib/platform-api";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
-import { Trophy, Users, Calendar, ArrowLeft, Loader2, Sword, Copy, CheckCircle2 } from "lucide-react";
+import { Trophy, Users, Calendar, ArrowLeft, Loader2, Sword } from "lucide-react";
 import { format } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
 import { motion } from "framer-motion";
@@ -18,8 +18,10 @@ import {
   getScoringRuleText,
   isFreeRulesMatch,
   isPaidCashSolo,
+  isPaidSquadCashMatch,
   SOLO_CASH_PAYOUT_LINES,
   SOLO_CASH_PRIZE_POOL_INR,
+  SQUAD_CASH_PRIZE_INR,
 } from "@/lib/match-display";
 
 export default function MatchDetailsPage() {
@@ -27,7 +29,6 @@ export default function MatchDetailsPage() {
   const matchId = Number(params.id);
   const { data: me } = useGetMe();
   const registerSquadMutation = useRegisterSquadMatch();
-  const joinSquadMutation = useJoinSquadMatch();
   const { data: match, isLoading } = useGetMatch(matchId, {
     query: { enabled: !!matchId, queryKey: getGetMatchQueryKey(matchId) },
   });
@@ -35,12 +36,7 @@ export default function MatchDetailsPage() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
   const [teamName, setTeamName] = useState("");
-  const [copied, setCopied] = useState(false);
-
-  const inviteCodeFromUrl = useMemo(
-    () => new URLSearchParams(window.location.search).get("invite")?.trim() ?? "",
-    [],
-  );
+  const [teammateUids, setTeammateUids] = useState(["", "", ""]);
 
   if (isLoading) {
     return (
@@ -111,16 +107,27 @@ export default function MatchDetailsPage() {
       return;
     }
 
+    const cleanedUids = teammateUids.map((value) => value.trim());
+    if (cleanedUids.some((value) => value.length === 0)) {
+      toast({
+        variant: "destructive",
+        title: "Teammate UIDs required",
+        description: "Enter all 3 teammate Free Fire UIDs before registering the squad.",
+      });
+      return;
+    }
+
     registerSquadMutation.mutate(
-      { matchId, teamName: teamName.trim() },
+      { matchId, teamName: teamName.trim(), teammateUids: cleanedUids },
       {
         onSuccess: (result) => {
           queryClient.invalidateQueries({ queryKey: getGetMatchQueryKey(matchId) });
           queryClient.invalidateQueries({ queryKey: getGetMeQueryKey() });
           queryClient.invalidateQueries({ queryKey: getListMatchesQueryKey() });
+          queryClient.invalidateQueries({ queryKey: getGetProfileQueryKey() });
           toast({
-            title: "Captain slot secured",
-            description: `${result.teamName} is registered. Share the invite link with 3 teammates.`,
+            title: "Squad registered",
+            description: `${result.teamName} locked in with ${result.members.length} verified players.`,
           });
         },
         onError: (err: any) => {
@@ -132,39 +139,6 @@ export default function MatchDetailsPage() {
         },
       },
     );
-  };
-
-  const handleJoinSquad = () => {
-    if (!inviteCodeFromUrl) {
-      toast({ variant: "destructive", title: "Invite required", description: "Open a squad invite link to join this 4v4 match." });
-      return;
-    }
-
-    joinSquadMutation.mutate(
-      { matchId, inviteCode: inviteCodeFromUrl },
-      {
-        onSuccess: () => {
-          queryClient.invalidateQueries({ queryKey: getGetMatchQueryKey(matchId) });
-          queryClient.invalidateQueries({ queryKey: getGetMeQueryKey() });
-          queryClient.invalidateQueries({ queryKey: getListMatchesQueryKey() });
-          toast({ title: "Squad joined", description: "You are now registered with the invited squad." });
-        },
-        onError: (err: any) => {
-          toast({
-            variant: "destructive",
-            title: "Unable to join squad",
-            description: err.message,
-          });
-        },
-      },
-    );
-  };
-
-  const copyInviteLink = async () => {
-    if (!myCaptainSquad?.inviteCode) return;
-    await navigator.clipboard.writeText(`${window.location.origin}/matches/${matchId}?invite=${myCaptainSquad.inviteCode}`);
-    setCopied(true);
-    window.setTimeout(() => setCopied(false), 1500);
   };
 
   return (
@@ -269,7 +243,11 @@ export default function MatchDetailsPage() {
                     <p className="text-sm text-muted-foreground mb-1 font-medium">Prize Pool</p>
                     <div className="text-4xl font-black text-yellow-500 flex items-center justify-center gap-2">
                       <Trophy className="h-8 w-8" />
-                      {isPaidCashSolo(match) ? `INR ${SOLO_CASH_PRIZE_POOL_INR}` : "Cash Prize"}
+                      {isPaidCashSolo(match)
+                        ? `INR ${SOLO_CASH_PRIZE_POOL_INR}`
+                        : isPaidSquadCashMatch(match)
+                          ? `INR ${SQUAD_CASH_PRIZE_INR}`
+                          : "Cash Prize"}
                     </div>
                   </div>
                 )}
@@ -300,6 +278,12 @@ export default function MatchDetailsPage() {
                         ))}
                       </div>
                     </div>
+                  ) : isPaidSquadCashMatch(match) ? (
+                    <div className="mt-2 space-y-2 text-sm text-muted-foreground">
+                      <p>Captain pays once and submits 3 teammate Free Fire UIDs.</p>
+                      <p>Every teammate must already be signed up in the system before the squad can be accepted.</p>
+                      <p>Cash prize for the squad: INR {SQUAD_CASH_PRIZE_INR}.</p>
+                    </div>
                   ) : (
                     <p className="mt-2 text-sm text-muted-foreground">{match.description}</p>
                   )}
@@ -312,37 +296,53 @@ export default function MatchDetailsPage() {
                   <div className="rounded-2xl border border-secondary/20 bg-secondary/10 p-4 space-y-4">
                     <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">4v4 Captain Flow</p>
                     <p className="text-sm text-muted-foreground">
-                      One captain pays the full INR {match.entryFeeInr} entry, then invites 3 teammates through a secure squad link. The opposing team does the same.
+                      Captain pays INR {match.entryFeeInr}, then enters 3 teammate Free Fire UIDs. We verify each UID against signed-up players before adding the squad to the match.
                     </p>
 
-                    {myCaptainSquad?.inviteCode ? (
+                    {myCaptainSquad ? (
                       <div className="space-y-3">
-                        <div className="rounded-xl border border-white/10 bg-background/50 p-3 text-xs break-all">
-                          {`${window.location.origin}/matches/${matchId}?invite=${myCaptainSquad.inviteCode}`}
+                        <div className="rounded-xl border border-white/10 bg-background/50 p-3 text-sm text-muted-foreground">
+                          Squad registered successfully. Verified roster:
                         </div>
-                        <Button variant="outline" className="w-full" onClick={copyInviteLink}>
-                          {copied ? <CheckCircle2 className="mr-2 h-4 w-4" /> : <Copy className="mr-2 h-4 w-4" />}
-                          {copied ? "Invite Link Copied" : "Copy Invite Link"}
-                        </Button>
+                        <div className="space-y-2">
+                          {myCaptainSquad.members.map((member) => (
+                            <div
+                              key={member.userId}
+                              className="rounded-xl border border-white/10 bg-background/50 px-3 py-2 text-sm"
+                            >
+                              <div className="font-semibold text-foreground">{member.username}</div>
+                              <div className="text-xs text-muted-foreground">UID: {member.freeFireUid}</div>
+                            </div>
+                          ))}
+                        </div>
                       </div>
                     ) : !match.joinedByMe ? (
                       <div className="space-y-3">
-                        {!inviteCodeFromUrl && (
+                        <Input
+                          value={teamName}
+                          onChange={(event) => setTeamName(event.target.value)}
+                          placeholder="Enter your squad name"
+                          className="border-white/10 bg-background/50"
+                        />
+                        {teammateUids.map((uid, index) => (
                           <Input
-                            value={teamName}
-                            onChange={(event) => setTeamName(event.target.value)}
-                            placeholder="Enter your squad name"
+                            key={index}
+                            value={uid}
+                            onChange={(event) => {
+                              const next = [...teammateUids];
+                              next[index] = event.target.value;
+                              setTeammateUids(next);
+                            }}
+                            placeholder={`Teammate ${index + 1} Free Fire UID`}
                             className="border-white/10 bg-background/50"
                           />
-                        )}
+                        ))}
                         <Button
-                          onClick={inviteCodeFromUrl ? handleJoinSquad : handleRegisterSquad}
-                          disabled={registerSquadMutation.isPending || joinSquadMutation.isPending}
+                          onClick={handleRegisterSquad}
+                          disabled={registerSquadMutation.isPending}
                           className="w-full bg-secondary text-secondary-foreground hover:bg-secondary/90"
                         >
-                          {inviteCodeFromUrl
-                            ? (joinSquadMutation.isPending ? "Joining squad..." : "Join Invited Squad")
-                            : (registerSquadMutation.isPending ? "Registering squad..." : "Pay and Create Squad")}
+                          {registerSquadMutation.isPending ? "Registering squad..." : "Pay and Register Squad"}
                         </Button>
                       </div>
                     ) : null}
@@ -382,13 +382,11 @@ export default function MatchDetailsPage() {
                     </Button>
                   ) : isSquadInviteMatch ? (
                     <Button
-                      onClick={inviteCodeFromUrl ? handleJoinSquad : handleRegisterSquad}
-                      disabled={registerSquadMutation.isPending || joinSquadMutation.isPending}
+                      onClick={handleRegisterSquad}
+                      disabled={registerSquadMutation.isPending}
                       className="w-full h-12 text-base font-bold bg-secondary text-secondary-foreground hover:bg-secondary/90"
                     >
-                      {inviteCodeFromUrl
-                        ? (joinSquadMutation.isPending ? <Loader2 className="h-5 w-5 animate-spin" /> : "Join Invited Squad")
-                        : (registerSquadMutation.isPending ? <Loader2 className="h-5 w-5 animate-spin" /> : "Pay and Create Squad")}
+                      {registerSquadMutation.isPending ? <Loader2 className="h-5 w-5 animate-spin" /> : "Pay and Register Squad"}
                     </Button>
                   ) : (
                     <Button

@@ -84,10 +84,13 @@ export type EconomyConfig = {
 export type SquadRegistration = {
   ok: true;
   squadId: number;
-  inviteCode: string;
-  inviteUrl: string;
   teamName: string;
   side: string;
+  members: Array<{
+    userId: number;
+    username: string;
+    freeFireUid: string;
+  }>;
   match: {
     id: number;
     name: string;
@@ -141,10 +144,13 @@ export function useEconomyConfig() {
 
 export function useRegisterSquadMatch() {
   return useMutation({
-    mutationFn: (input: { matchId: number; teamName: string }) =>
+    mutationFn: (input: { matchId: number; teamName: string; teammateUids: string[] }) =>
       apiFetch<SquadRegistration>(`/api/matches/${input.matchId}/squad/register`, {
         method: "POST",
-        body: JSON.stringify({ teamName: input.teamName }),
+        body: JSON.stringify({
+          teamName: input.teamName,
+          teammateUids: input.teammateUids,
+        }),
       }),
   });
 }

@@ -14,7 +14,7 @@ import {
   getLobbyPrizeSubtext,
   getLobbyPrizeText,
   getLobbyPrizeTitle,
-  getScoringRuleText,
+  getLobbySummaryText,
   isFreeRulesMatch,
   isPaidCashSolo,
 } from "@/lib/match-display";
@@ -96,7 +96,7 @@ export default function LobbyPage() {
                   
                   <h3 className="text-xl font-bold mb-4 line-clamp-1 group-hover:text-primary transition-colors">{match.name}</h3>
                   <p className="mb-4 text-sm leading-6 text-muted-foreground line-clamp-3">
-                    {isFreeRulesMatch(match) ? getScoringRuleText(match) : match.description}
+                    {getLobbySummaryText(match)}
                   </p>
                   
                   <div className="grid grid-cols-2 gap-4 text-sm mb-4">
