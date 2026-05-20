@@ -97,6 +97,52 @@ export type SquadRegistration = {
   };
 };
 
+export type PaymentPackage = {
+  inr: number;
+  coins: number;
+};
+
+export type PaymentPackageConfig = {
+  provider: "razorpay";
+  keyId: string | null;
+  packages: PaymentPackage[];
+};
+
+export type RazorpayOrderPayload = {
+  ok: true;
+  keyId: string;
+  orderId: string;
+  amountPaise: number;
+  currency: string;
+  package: PaymentPackage;
+  paymentId: number;
+  prefill: {
+    name: string;
+    email: string;
+    contact: string;
+  };
+};
+
+export type RazorpayVerifyPayload = {
+  ok: true;
+  status: string;
+  packageInr: number;
+  packageCoins: number;
+};
+
+export type PaymentHistoryEntry = {
+  id: number;
+  provider: string;
+  status: string;
+  packageInr: number;
+  packageCoins: number;
+  amountPaise: number;
+  providerOrderId: string;
+  providerPaymentId: string | null;
+  createdAt: string;
+  verifiedAt: string | null;
+};
+
 export function useWatchRewardVideos(enabled = true) {
   return useQuery({
     queryKey: ["watch-reward-videos"],
@@ -139,6 +185,46 @@ export function useEconomyConfig() {
   return useQuery({
     queryKey: ["economy-config"],
     queryFn: () => apiFetch<EconomyConfig>("/api/economy"),
+  });
+}
+
+export function usePaymentPackages(enabled = true) {
+  return useQuery({
+    queryKey: ["payment-packages"],
+    queryFn: () => apiFetch<PaymentPackageConfig>("/api/payments/packages"),
+    enabled,
+  });
+}
+
+export function usePaymentHistory(enabled = true) {
+  return useQuery({
+    queryKey: ["payment-history"],
+    queryFn: () => apiFetch<PaymentHistoryEntry[]>("/api/payments/history"),
+    enabled,
+  });
+}
+
+export function useCreateRazorpayOrder() {
+  return useMutation({
+    mutationFn: (packageInr: number) =>
+      apiFetch<RazorpayOrderPayload>("/api/payments/razorpay/order", {
+        method: "POST",
+        body: JSON.stringify({ packageInr }),
+      }),
+  });
+}
+
+export function useVerifyRazorpayPayment() {
+  return useMutation({
+    mutationFn: (input: {
+      razorpayOrderId: string;
+      razorpayPaymentId: string;
+      razorpaySignature: string;
+    }) =>
+      apiFetch<RazorpayVerifyPayload>("/api/payments/razorpay/verify", {
+        method: "POST",
+        body: JSON.stringify(input),
+      }),
   });
 }
 
