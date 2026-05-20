@@ -9,6 +9,15 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Coins, Users, Trophy, Calendar, Sword, Crosshair, Flame } from "lucide-react";
 import { format } from "date-fns";
 import { motion } from "framer-motion";
+import {
+  getLobbyEntryFeeText,
+  getLobbyPrizeSubtext,
+  getLobbyPrizeText,
+  getLobbyPrizeTitle,
+  getScoringRuleText,
+  isFreeRulesMatch,
+  isPaidCashSolo,
+} from "@/lib/match-display";
 
 export default function LobbyPage() {
   const { data: matches, isLoading } = useListMatches();
@@ -38,16 +47,13 @@ export default function LobbyPage() {
         <div className="arena-shell mb-8 p-5">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
             <div>
-              <p className="text-xs uppercase tracking-[0.24em] text-primary/80">EBI Economy</p>
-              <h2 className="mt-2 text-2xl font-black">400 signup coins, 20 daily login coins, 10 coins per kill, 80 for Booyah.</h2>
-            </div>
-            <div className="grid grid-cols-2 gap-3 md:grid-cols-5">
-              {economy.packages.map((pkg) => (
-                <div key={pkg.inr} className="arena-chip rounded-2xl px-4 py-3 text-center">
-                  <div className="text-xs uppercase tracking-[0.16em] text-muted-foreground">INR {pkg.inr}</div>
-                  <div className="mt-1 font-black text-primary">{pkg.coins}</div>
-                </div>
-              ))}
+              <p className="text-xs uppercase tracking-[0.24em] text-primary/80">Match Rules</p>
+              <h2 className="mt-2 text-2xl font-black">
+                1 kill = {economy.payoutRules.perKillCoins} coins, Booyah = {economy.payoutRules.booyahCoins} coins.
+              </h2>
+              <p className="mt-2 text-sm text-muted-foreground">
+                Free rooms reward in-game coins. Paid tournaments show INR entry fees and cash-style prize messaging.
+              </p>
             </div>
           </div>
         </div>
@@ -89,35 +95,45 @@ export default function LobbyPage() {
                   </div>
                   
                   <h3 className="text-xl font-bold mb-4 line-clamp-1 group-hover:text-primary transition-colors">{match.name}</h3>
-                  <p className="mb-4 text-sm leading-6 text-muted-foreground line-clamp-3">{match.description}</p>
+                  <p className="mb-4 text-sm leading-6 text-muted-foreground line-clamp-3">
+                    {isFreeRulesMatch(match) ? getScoringRuleText(match) : match.description}
+                  </p>
                   
                   <div className="grid grid-cols-2 gap-4 text-sm mb-4">
                     <div className="space-y-1.5">
                       <div className="text-muted-foreground flex items-center gap-1.5">
                         <Coins className="h-4 w-4" /> Entry Fee
                       </div>
-                      <div className="font-bold text-lg">
-                        {match.entryFee > 0 ? `${match.entryFee} coins` : "FREE"}
-                      </div>
-                      {match.entryFeeInr > 0 && (
-                        <div className="text-xs text-muted-foreground">INR {match.entryFeeInr}</div>
-                      )}
+                      <div className="font-bold text-lg">{getLobbyEntryFeeText(match)}</div>
                     </div>
                     <div className="space-y-1.5">
                       <div className="text-muted-foreground flex items-center gap-1.5">
-                        <Trophy className="h-4 w-4 text-yellow-500" /> Prize Pool
+                        <Trophy className="h-4 w-4 text-yellow-500" /> {getLobbyPrizeTitle(match)}
                       </div>
-                      <div className="font-bold text-lg text-yellow-500">{match.prize} Coins</div>
+                      <div className="font-bold text-lg text-yellow-500">{getLobbyPrizeText(match)}</div>
+                      {getLobbyPrizeSubtext(match) && (
+                        <div className="text-xs leading-5 text-muted-foreground">
+                          {getLobbyPrizeSubtext(match)}
+                        </div>
+                      )}
                     </div>
                   </div>
                   
                   <div className="space-y-2 text-sm text-muted-foreground">
-                    <div className="flex items-center justify-between bg-background/50 p-2 rounded-md">
-                      <span className="flex items-center gap-2"><Crosshair className="h-4 w-4" /> Kill / Booyah</span>
-                      <span className="font-medium text-foreground">
-                        {match.payoutPerKill} / {match.booyahBonus}
-                      </span>
-                    </div>
+                    {isFreeRulesMatch(match) && (
+                      <div className="flex items-center justify-between bg-background/50 p-2 rounded-md">
+                        <span className="flex items-center gap-2"><Crosshair className="h-4 w-4" /> Kill / Booyah</span>
+                        <span className="font-medium text-foreground">
+                          {match.payoutPerKill} / {match.booyahBonus}
+                        </span>
+                      </div>
+                    )}
+                    {isPaidCashSolo(match) && (
+                      <div className="flex items-center justify-between bg-background/50 p-2 rounded-md">
+                        <span className="flex items-center gap-2"><Trophy className="h-4 w-4" /> Top 5 Payout</span>
+                        <span className="font-medium text-foreground">INR 300 / 200 / 100 / 50 / 50</span>
+                      </div>
+                    )}
                     <div className="flex items-center justify-between bg-background/50 p-2 rounded-md">
                       <span className="flex items-center gap-2"><Users className="h-4 w-4" /> Slots</span>
                       <span className="font-medium text-foreground">

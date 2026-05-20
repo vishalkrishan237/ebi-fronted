@@ -8,10 +8,19 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
-import { Trophy, Coins, Users, Calendar, ArrowLeft, Loader2, Sword, Copy, CheckCircle2 } from "lucide-react";
+import { Trophy, Users, Calendar, ArrowLeft, Loader2, Sword, Copy, CheckCircle2 } from "lucide-react";
 import { format } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
 import { motion } from "framer-motion";
+import {
+  getDetailsHeroText,
+  getLobbyEntryFeeText,
+  getScoringRuleText,
+  isFreeRulesMatch,
+  isPaidCashSolo,
+  SOLO_CASH_PAYOUT_LINES,
+  SOLO_CASH_PRIZE_POOL_INR,
+} from "@/lib/match-display";
 
 export default function MatchDetailsPage() {
   const params = useParams();
@@ -183,7 +192,7 @@ export default function MatchDetailsPage() {
               </div>
 
               <h1 className="text-4xl md:text-5xl font-black tracking-tight mb-4">{match.name}</h1>
-              <p className="mb-4 max-w-3xl text-sm leading-7 text-muted-foreground">{match.description}</p>
+              <p className="mb-4 max-w-3xl text-sm leading-7 text-muted-foreground">{getDetailsHeroText(match)}</p>
 
               <div className="flex flex-wrap items-center gap-6 text-sm font-medium">
                 <div className="flex items-center gap-2 bg-background/50 backdrop-blur-md px-4 py-2 rounded-lg border border-white/5">
@@ -248,43 +257,53 @@ export default function MatchDetailsPage() {
           <Card className="sticky top-24 border-white/10 bg-card/75 shadow-[0_24px_80px_rgba(0,0,0,0.45)]">
             <CardContent className="p-6">
               <div className="space-y-6">
-                <div className="p-4 rounded-2xl bg-background/60 border border-white/5 text-center">
-                  <p className="text-sm text-muted-foreground mb-1 font-medium">Prize Pool</p>
-                  <div className="text-4xl font-black text-yellow-500 flex items-center justify-center gap-2">
-                    <Trophy className="h-8 w-8" /> {match.prize}
+                {isFreeRulesMatch(match) ? (
+                  <div className="p-4 rounded-2xl bg-background/60 border border-white/5 text-center">
+                    <p className="text-sm text-muted-foreground mb-1 font-medium">Match Rules</p>
+                    <div className="text-xl font-black text-yellow-500 flex items-center justify-center gap-2">
+                      <Trophy className="h-6 w-6" /> {getScoringRuleText(match)}
+                    </div>
                   </div>
-                </div>
+                ) : (
+                  <div className="p-4 rounded-2xl bg-background/60 border border-white/5 text-center">
+                    <p className="text-sm text-muted-foreground mb-1 font-medium">Prize Pool</p>
+                    <div className="text-4xl font-black text-yellow-500 flex items-center justify-center gap-2">
+                      <Trophy className="h-8 w-8" />
+                      {isPaidCashSolo(match) ? `INR ${SOLO_CASH_PRIZE_POOL_INR}` : "Cash Prize"}
+                    </div>
+                  </div>
+                )}
 
                 <div className="flex justify-between items-center py-4 border-b border-white/5">
                   <span className="text-muted-foreground font-medium">Entry Fee</span>
                   <span className="font-bold text-lg flex items-center gap-1.5">
-                    {match.entryFee > 0 ? (
-                      <><Coins className="h-5 w-5 text-secondary" /> {match.entryFee}</>
-                    ) : (
+                    {match.type === "free" ? (
                       <span className="text-green-500">FREE</span>
+                    ) : (
+                      <>{getLobbyEntryFeeText(match)}</>
                     )}
                   </span>
                 </div>
-                {match.entryFeeInr > 0 && (
-                  <div className="flex justify-between items-center py-4 border-b border-white/5">
-                    <span className="text-muted-foreground font-medium">INR Price</span>
-                    <span className="font-bold text-lg">INR {match.entryFeeInr}</span>
-                  </div>
-                )}
-
-                <div className="rounded-2xl border border-primary/20 bg-primary/10 p-4">
-                  <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Wallet-safe entry</p>
-                  <p className="mt-2 text-sm text-muted-foreground">
-                    Match entry now debits your server-side wallet ledger directly. Reward coupons remain redeemable rewards and are no longer treated as coin discounts during entry. Daily login rewards grant 20 coins once per India calendar day.
-                  </p>
-                </div>
 
                 <div className="rounded-2xl border border-white/8 bg-background/35 p-4">
-                  <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Payout Rules</p>
-                  <p className="mt-2 text-sm text-muted-foreground">
-                    {match.payoutPerKill} coins per kill and {match.booyahBonus} coins for Booyah.
+                  <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">
+                    {isFreeRulesMatch(match) ? "Scoring Rules" : "Tournament Rules"}
                   </p>
-                  <p className="mt-2 text-sm text-muted-foreground">
+                  {isFreeRulesMatch(match) ? (
+                    <p className="mt-2 text-sm text-muted-foreground">{getScoringRuleText(match)}</p>
+                  ) : isPaidCashSolo(match) ? (
+                    <div className="mt-2 space-y-2 text-sm text-muted-foreground">
+                      <p>Top 5 cash payout for this match:</p>
+                      <div className="space-y-1">
+                        {SOLO_CASH_PAYOUT_LINES.map((line) => (
+                          <p key={line}>{line}</p>
+                        ))}
+                      </div>
+                    </div>
+                  ) : (
+                    <p className="mt-2 text-sm text-muted-foreground">{match.description}</p>
+                  )}
+                  <p className="mt-3 text-sm text-muted-foreground">
                     Minimum players before start: {match.minPlayersToStart}. Format: {match.mode.toUpperCase()} {match.teamSize > 1 ? `${match.teamSize}v${match.teamSize}` : ""}
                   </p>
                 </div>
