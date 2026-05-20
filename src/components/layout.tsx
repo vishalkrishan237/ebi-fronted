@@ -12,7 +12,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/60 to-transparent" />
       </div>
       <Navbar />
-      <main className="relative z-10 flex-1 flex flex-col">
+      <main className="relative z-10 flex flex-1 flex-col pb-24 lg:pb-0">
         {children}
       </main>
     </div>
