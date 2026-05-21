@@ -43,7 +43,7 @@ export function getLobbySummaryText(match: DisplayMatch): string {
   }
 
   if (isPaidSquadCashMatch(match)) {
-    return "Captain pays once, then submits 3 teammate Free Fire UIDs. All 4 squad players must already be signed up.";
+    return "Captain 1 pays once to lock 4 seats. Captain 2 pays once to lock the other 4 seats. One match starts with 2 full Clash Squad teams.";
   }
 
   return getScoringRuleText(match);
@@ -99,7 +99,7 @@ export function getDetailsHeroText(match: DisplayMatch): string {
   }
 
   if (isPaidSquadCashMatch(match)) {
-    return "Captain pays once, then submits 3 teammate Free Fire UIDs. All 4 squad players must already be signed up. Cash prize: INR 170.";
+    return "Captain 1 pays once and submits 3 teammate UIDs to create the first team. Captain 2 does the same for the second team. Total Clash Squad prize pool: INR 170.";
   }
 
   return getScoringRuleText(match);

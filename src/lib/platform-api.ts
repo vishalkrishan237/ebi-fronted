@@ -130,6 +130,63 @@ export type RazorpayVerifyPayload = {
   packageCoins: number;
 };
 
+export type MatchEntryOrderInput = {
+  matchId: number;
+  couponCode?: string;
+  teamName?: string;
+  teammateUids?: string[];
+};
+
+export type MatchEntryOrderPayload =
+  | {
+      ok: true;
+      requiresPayment: false;
+      match: {
+        id: number;
+        name: string;
+      };
+      couponCodeUsed: string | null;
+      finalAmountInr: number;
+    }
+  | {
+      ok: true;
+      requiresPayment: true;
+      keyId: string;
+      orderId: string;
+      amountPaise: number;
+      currency: string;
+      match: {
+        id: number;
+        name: string;
+      };
+      originalAmountInr: number;
+      finalAmountInr: number;
+      discountInr: number;
+      couponCodeUsed: string | null;
+      prefill: {
+        name: string;
+        email: string;
+        contact: string;
+      };
+    };
+
+export type MatchEntryVerifyInput = {
+  matchId: number;
+  razorpayOrderId: string;
+  razorpayPaymentId: string;
+  razorpaySignature: string;
+};
+
+export type MatchEntryVerifyPayload = {
+  ok: true;
+  status: string;
+  match: {
+    id: number;
+    name: string;
+  };
+  couponCodeUsed: string | null;
+};
+
 export type PaymentHistoryEntry = {
   id: number;
   provider: string;
@@ -224,6 +281,34 @@ export function useVerifyRazorpayPayment() {
       apiFetch<RazorpayVerifyPayload>("/api/payments/razorpay/verify", {
         method: "POST",
         body: JSON.stringify(input),
+      }),
+  });
+}
+
+export function useCreateMatchEntryOrder() {
+  return useMutation({
+    mutationFn: (input: MatchEntryOrderInput) =>
+      apiFetch<MatchEntryOrderPayload>(`/api/payments/matches/${input.matchId}/razorpay/order`, {
+        method: "POST",
+        body: JSON.stringify({
+          couponCode: input.couponCode,
+          teamName: input.teamName,
+          teammateUids: input.teammateUids,
+        }),
+      }),
+  });
+}
+
+export function useVerifyMatchEntryPayment() {
+  return useMutation({
+    mutationFn: (input: MatchEntryVerifyInput) =>
+      apiFetch<MatchEntryVerifyPayload>(`/api/payments/matches/${input.matchId}/razorpay/verify`, {
+        method: "POST",
+        body: JSON.stringify({
+          razorpayOrderId: input.razorpayOrderId,
+          razorpayPaymentId: input.razorpayPaymentId,
+          razorpaySignature: input.razorpaySignature,
+        }),
       }),
   });
 }

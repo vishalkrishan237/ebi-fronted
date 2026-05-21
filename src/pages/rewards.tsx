@@ -14,47 +14,7 @@ import {
   usePaymentPackages,
   useVerifyRazorpayPayment,
 } from "@/lib/platform-api";
-
-declare global {
-  interface Window {
-    Razorpay?: new (options: Record<string, unknown>) => {
-      open: () => void;
-    };
-  }
-}
-
-let razorpayScriptPromise: Promise<boolean> | null = null;
-
-function loadRazorpayScript() {
-  if (typeof window === "undefined") {
-    return Promise.resolve(false);
-  }
-
-  if (window.Razorpay) {
-    return Promise.resolve(true);
-  }
-
-  if (!razorpayScriptPromise) {
-    razorpayScriptPromise = new Promise((resolve) => {
-      const existing = document.querySelector<HTMLScriptElement>('script[data-razorpay-sdk="true"]');
-      if (existing) {
-        existing.addEventListener("load", () => resolve(true), { once: true });
-        existing.addEventListener("error", () => resolve(false), { once: true });
-        return;
-      }
-
-      const script = document.createElement("script");
-      script.src = "https://checkout.razorpay.com/v1/checkout.js";
-      script.async = true;
-      script.dataset.razorpaySdk = "true";
-      script.onload = () => resolve(true);
-      script.onerror = () => resolve(false);
-      document.body.appendChild(script);
-    });
-  }
-
-  return razorpayScriptPromise;
-}
+import { loadRazorpayScript } from "@/lib/razorpay";
 
 export default function RewardsPage() {
   const { data: me } = useGetMe();
@@ -146,7 +106,7 @@ export default function RewardsPage() {
       <div className="mb-8 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
         <div>
           <h1 className="text-3xl font-black tracking-tight mb-2">Wallet & Payments</h1>
-          <p className="text-muted-foreground">Top up with Razorpay, then use your wallet for tournament joins and coupons.</p>
+          <p className="text-muted-foreground">Top up coins for rewards and coupon redemption. Paid tournament entry now checks out directly in INR.</p>
         </div>
 
         <Card className="border-white/10 bg-card/65">
@@ -348,7 +308,7 @@ export default function RewardsPage() {
               <p>1. Choose a package and open Razorpay checkout.</p>
               <p>2. After successful payment, the backend verifies the payment signature.</p>
               <p>3. Verified payments credit coins through the existing wallet ledger.</p>
-              <p>4. Those coins can then be used for matches and coupon redemption.</p>
+              <p>4. Those coins can be used for wallet rewards and coupon redemption, while paid match entry now uses direct checkout.</p>
             </CardContent>
           </Card>
         </div>

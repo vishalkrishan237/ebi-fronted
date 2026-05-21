@@ -17,6 +17,7 @@ import {
   getLobbySummaryText,
   isFreeRulesMatch,
   isPaidCashSolo,
+  isPaidSquadCashMatch,
 } from "@/lib/match-display";
 
 export default function LobbyPage() {
@@ -82,7 +83,7 @@ export default function LobbyPage() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: i * 0.05 }}
             >
-              <Card className="flex flex-col h-full bg-card/50 backdrop-blur-sm border-white/10 hover:border-primary/50 transition-all hover:shadow-[0_0_30px_rgba(219,39,119,0.15)] overflow-hidden group">
+              <Card className="group flex h-full flex-col overflow-hidden border-white/10 bg-card/50 backdrop-blur-sm transition-all hover:border-primary/50 hover:shadow-[0_24px_44px_rgba(0,0,0,0.32)]">
                 <div className="h-2 w-full bg-gradient-to-r from-primary/50 to-secondary/50" />
                 <CardContent className="p-6 flex-1">
                   <div className="flex justify-between items-start mb-4">
@@ -132,6 +133,12 @@ export default function LobbyPage() {
                       <div className="flex items-center justify-between bg-background/50 p-2 rounded-md">
                         <span className="flex items-center gap-2"><Trophy className="h-4 w-4" /> Top 5 Payout</span>
                         <span className="font-medium text-foreground">INR 300 / 200 / 100 / 50 / 50</span>
+                      </div>
+                    )}
+                    {isPaidSquadCashMatch(match) && (
+                      <div className="flex items-center justify-between bg-background/50 p-2 rounded-md">
+                        <span className="flex items-center gap-2"><Users className="h-4 w-4" /> Team Lock</span>
+                        <span className="font-medium text-foreground">2 captains x 4 seats</span>
                       </div>
                     )}
                     <div className="flex items-center justify-between bg-background/50 p-2 rounded-md">

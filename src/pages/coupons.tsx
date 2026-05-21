@@ -10,7 +10,7 @@ import {
   type Coupon,
 } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
@@ -25,7 +25,7 @@ import {
   Loader2,
 } from "lucide-react";
 import { format } from "date-fns";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import {
   Dialog,
   DialogContent,
@@ -65,7 +65,7 @@ export default function CouponsPage() {
           queryClient.invalidateQueries({ queryKey: getGetMyCouponsQueryKey() });
           queryClient.invalidateQueries({ queryKey: getGetMeQueryKey() });
           queryClient.invalidateQueries({ queryKey: getGetRewardsQueryKey() });
-          toast({ title: "Coupon redeemed!", description: `₹${valueInr} coupon ready to use.` });
+          toast({ title: "Coupon redeemed!", description: `Rs. ${valueInr} coupon ready to use.` });
         },
         onError: (err: any) => {
           toast({
@@ -87,20 +87,19 @@ export default function CouponsPage() {
   };
 
   return (
-    <div className="container mx-auto px-4 py-8 max-w-5xl">
+    <div className="container mx-auto max-w-5xl px-4 py-8">
       <div className="mb-6 flex items-center gap-3">
         <Ticket className="h-8 w-8 text-primary" />
         <div>
           <h1 className="text-3xl font-black tracking-tight">Coupon Store</h1>
-          <p className="text-muted-foreground">Redeem your coins for tournament coupons.</p>
+          <p className="text-muted-foreground">Redeem coins for tournament vouchers with clear rupee values.</p>
         </div>
       </div>
 
-      <Card className="mb-8 border-white/10 bg-gradient-to-br from-primary/15 via-card/60 to-secondary/10 shadow-[0_0_40px_rgba(219,39,119,0.15)] overflow-hidden relative">
-        <div className="absolute -top-12 -right-12 h-40 w-40 rounded-full bg-secondary/20 blur-3xl" />
-        <CardContent className="p-6 flex items-center justify-between relative">
+      <Card className="relative mb-8 overflow-hidden border-white/10 bg-[linear-gradient(135deg,rgba(167,46,32,0.18),rgba(15,17,22,0.95)_60%)]">
+        <CardContent className="relative flex items-center justify-between p-6">
           <div>
-            <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground mb-1">
+            <p className="mb-1 text-xs uppercase tracking-[0.2em] text-muted-foreground">
               Your balance
             </p>
             <div className="flex items-center gap-2">
@@ -108,23 +107,24 @@ export default function CouponsPage() {
               <span className="font-mono text-4xl font-black text-secondary">
                 {balance.toLocaleString()}
               </span>
-              <span className="text-muted-foreground text-sm font-medium ml-1">coins</span>
+              <span className="ml-1 text-sm font-medium text-muted-foreground">coins</span>
             </div>
           </div>
-          <div className="hidden sm:block text-right">
-            <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground mb-1">
+          <div className="hidden text-right sm:block">
+            <p className="mb-1 text-xs uppercase tracking-[0.2em] text-muted-foreground">
               Coupons owned
             </p>
-            <p className="font-black text-3xl text-primary">{myCoupons?.length ?? 0}</p>
+            <p className="text-3xl font-black text-primary">{myCoupons?.length ?? 0}</p>
+            <p className="mt-1 text-xs text-muted-foreground">Ready for tournament entry or promo use.</p>
           </div>
         </CardContent>
       </Card>
 
       <div className="mb-10">
-        <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
+        <h2 className="mb-4 flex items-center gap-2 text-xl font-bold">
           <Gift className="h-5 w-5 text-primary" /> Available Coupons
         </h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {options?.map((opt, i) => {
             const canAfford = balance >= opt.coinCost;
             const isLoading =
@@ -137,37 +137,39 @@ export default function CouponsPage() {
                 transition={{ delay: i * 0.05 }}
               >
                 <Card
-                  className={`relative overflow-hidden border-white/10 bg-card/60 transition-all hover:border-primary/40 ${
-                    canAfford ? "hover:shadow-[0_0_24px_rgba(219,39,119,0.25)]" : "opacity-70"
+                  className={`relative overflow-hidden border-white/10 bg-card/80 transition-all hover:border-primary/40 ${
+                    canAfford ? "hover:-translate-y-1 hover:shadow-[0_24px_40px_rgba(0,0,0,0.32)]" : "opacity-70"
                   }`}
                 >
-                  <div className="absolute -top-8 -right-8 h-24 w-24 rounded-full bg-primary/10 blur-2xl" />
-                  <CardContent className="p-5 relative flex flex-col gap-4">
+                  <CardContent className="relative flex flex-col gap-4 p-5">
                     <div className="flex items-center justify-between">
-                      <div className="h-10 w-10 rounded-lg bg-gradient-to-br from-primary/30 to-secondary/30 flex items-center justify-center border border-primary/30">
+                      <div className="flex h-10 w-10 items-center justify-center rounded-lg border border-primary/30 bg-primary/10">
                         <Ticket className="h-5 w-5 text-primary" />
                       </div>
                       <Badge
                         variant="outline"
-                        className="border-secondary/40 text-secondary text-[10px] font-mono"
+                        className="border-secondary/40 text-[10px] font-mono text-secondary"
                       >
-                        {opt.coinCost} <Coins className="h-2.5 w-2.5 ml-0.5" />
+                        {opt.coinCost.toLocaleString()} <Coins className="ml-0.5 h-2.5 w-2.5" />
                       </Badge>
                     </div>
                     <div>
                       <p className="text-xs uppercase tracking-wider text-muted-foreground">
                         Tournament Coupon
                       </p>
-                      <div className="flex items-baseline gap-1 mt-1">
+                      <div className="mt-1 flex items-baseline gap-1">
                         <IndianRupee className="h-5 w-5 text-foreground" />
                         <span className="text-3xl font-black tracking-tight">{opt.valueInr}</span>
-                        <span className="text-muted-foreground text-sm">value</span>
+                        <span className="text-sm text-muted-foreground">value</span>
                       </div>
+                      <p className="mt-2 text-sm text-muted-foreground">
+                        {opt.coinCost.toLocaleString()} coins = Rs. {opt.valueInr}
+                      </p>
                     </div>
                     <Button
                       onClick={() => handleRedeem(opt.coinCost, opt.valueInr)}
                       disabled={!canAfford || isLoading || !me?.user}
-                      className="w-full bg-primary hover:bg-primary/90 text-primary-foreground shadow-[0_0_20px_rgba(219,39,119,0.35)]"
+                      className="w-full bg-primary text-primary-foreground hover:bg-primary/90"
                     >
                       {isLoading ? (
                         <Loader2 className="h-4 w-4 animate-spin" />
@@ -177,7 +179,7 @@ export default function CouponsPage() {
                         "Not enough coins"
                       ) : (
                         <>
-                          <Sparkles className="h-4 w-4 mr-1.5" /> Redeem
+                          <Sparkles className="mr-1.5 h-4 w-4" /> Redeem
                         </>
                       )}
                     </Button>
@@ -190,10 +192,10 @@ export default function CouponsPage() {
       </div>
 
       <div>
-        <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
+        <h2 className="mb-4 flex items-center gap-2 text-xl font-bold">
           <Ticket className="h-5 w-5 text-secondary" /> My Coupons
         </h2>
-        <Card className="border-white/10 bg-card/50 overflow-hidden">
+        <Card className="overflow-hidden border-white/10 bg-card/50">
           <CardContent className="p-0">
             {!me?.user ? (
               <div className="p-12 text-center text-muted-foreground">
@@ -201,8 +203,8 @@ export default function CouponsPage() {
               </div>
             ) : !myCoupons || myCoupons.length === 0 ? (
               <div className="p-12 text-center text-muted-foreground">
-                <Ticket className="h-12 w-12 mx-auto mb-4 opacity-20" />
-                <p>You haven't redeemed any coupons yet.</p>
+                <Ticket className="mx-auto mb-4 h-12 w-12 opacity-20" />
+                <p>You haven&apos;t redeemed any coupons yet.</p>
               </div>
             ) : (
               <div className="divide-y divide-white/5">
@@ -212,23 +214,23 @@ export default function CouponsPage() {
                     initial={{ opacity: 0, x: -8 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: i * 0.03 }}
-                    className="p-4 sm:p-5 flex items-center justify-between gap-4 hover:bg-white/5 transition-colors"
+                    className="flex items-center justify-between gap-4 p-4 transition-colors hover:bg-white/5 sm:p-5"
                   >
-                    <div className="flex items-center gap-4 min-w-0">
-                      <div className="h-12 w-12 rounded-lg bg-gradient-to-br from-primary/20 to-secondary/20 border border-primary/30 flex items-center justify-center shrink-0">
+                    <div className="flex min-w-0 items-center gap-4">
+                      <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg border border-primary/30 bg-gradient-to-br from-primary/20 to-secondary/20">
                         <Ticket className="h-6 w-6 text-primary" />
                       </div>
                       <div className="min-w-0">
-                        <div className="flex items-center gap-2 mb-1">
-                          <p className="font-bold text-lg flex items-center">
+                        <div className="mb-1 flex items-center gap-2">
+                          <p className="flex items-center text-lg font-bold">
                             <IndianRupee className="h-4 w-4" />
                             {c.valueInr}
                           </p>
                           <Badge
                             className={
                               c.status === "active"
-                                ? "bg-green-500/15 text-green-400 border border-green-500/30 text-[10px]"
-                                : "bg-muted text-muted-foreground border text-[10px]"
+                                ? "border border-green-500/30 bg-green-500/15 text-[10px] text-green-400"
+                                : "border bg-muted text-[10px] text-muted-foreground"
                             }
                           >
                             {c.status.toUpperCase()}
@@ -236,7 +238,7 @@ export default function CouponsPage() {
                         </div>
                         <button
                           onClick={() => copyCode(c.code)}
-                          className="font-mono text-sm text-foreground/80 hover:text-primary transition-colors flex items-center gap-1.5 group"
+                          className="group flex items-center gap-1.5 font-mono text-sm text-foreground/80 transition-colors hover:text-primary"
                           title="Click to copy"
                         >
                           {c.code}
@@ -246,17 +248,17 @@ export default function CouponsPage() {
                             <Copy className="h-3.5 w-3.5 opacity-50 group-hover:opacity-100" />
                           )}
                         </button>
-                        <p className="text-[10px] text-muted-foreground mt-1">
+                        <p className="mt-1 text-[10px] text-muted-foreground">
                           Redeemed {format(new Date(c.createdAt), "MMM d, yyyy HH:mm")}
                         </p>
                       </div>
                     </div>
-                    <div className="text-right shrink-0">
+                    <div className="shrink-0 text-right">
                       <p className="text-[10px] uppercase tracking-wider text-muted-foreground">
                         Cost
                       </p>
-                      <p className="font-mono font-bold flex items-center gap-1 justify-end text-secondary">
-                        {c.coinCost}
+                      <p className="flex items-center justify-end gap-1 font-mono font-bold text-secondary">
+                        {c.coinCost.toLocaleString()}
                         <Coins className="h-3.5 w-3.5" />
                       </p>
                     </div>
@@ -281,12 +283,12 @@ export default function CouponsPage() {
           {justRedeemed && (
             <div className="space-y-4">
               <div className="rounded-xl border border-dashed border-primary/40 bg-gradient-to-br from-primary/10 to-secondary/10 p-6 text-center">
-                <div className="flex items-baseline justify-center gap-1 mb-3">
+                <div className="mb-3 flex items-baseline justify-center gap-1">
                   <IndianRupee className="h-7 w-7" />
                   <span className="text-5xl font-black">{justRedeemed.valueInr}</span>
-                  <span className="text-muted-foreground ml-2">tournament credit</span>
+                  <span className="ml-2 text-muted-foreground">tournament credit</span>
                 </div>
-                <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground mb-2">
+                <p className="mb-2 text-xs uppercase tracking-[0.2em] text-muted-foreground">
                   Coupon Code
                 </p>
                 <div className="flex items-center justify-center gap-2">

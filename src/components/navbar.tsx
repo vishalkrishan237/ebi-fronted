@@ -3,7 +3,7 @@ import { Link, useLocation } from "wouter";
 import { useGetMe, useLogout, getGetMeQueryKey } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
-import { Coins, Gift, History, Home, LogOut, Menu, PlaySquare, Shield, Trophy, UserCircle } from "lucide-react";
+import { Bot, Coins, Gift, History, Home, LogOut, Menu, PlaySquare, Shield, Sparkles, Trophy, UserCircle } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -88,13 +88,13 @@ export function Navbar() {
         <div className="container mx-auto flex min-h-[4.5rem] items-center justify-between gap-3 px-4 py-3">
           <div className="flex min-w-0 items-center gap-3 sm:gap-6">
             <Link href="/" className="group flex min-w-0 items-center gap-3">
-              <div className="arena-glow grid h-11 w-11 shrink-0 place-items-center rounded-2xl border border-primary/35 bg-primary/10 shadow-[0_0_24px_rgba(34,211,238,0.18)] transition-all group-hover:scale-105">
+              <div className="arena-glow grid h-11 w-11 shrink-0 place-items-center rounded-2xl border border-primary/35 bg-primary/10 shadow-[0_0_24px_rgba(167,46,32,0.18)] transition-all group-hover:scale-105">
                 <Trophy className="h-5 w-5 text-primary" />
               </div>
               <div className="min-w-0">
                 <div className="text-[10px] uppercase tracking-[0.24em] text-muted-foreground sm:text-[11px]">Elite Battle</div>
                 <div className="truncate text-base font-black tracking-[0.05em] text-foreground sm:text-lg sm:tracking-[0.08em]">
-                  Arena Network
+                  India
                 </div>
               </div>
             </Link>
@@ -109,7 +109,7 @@ export function Navbar() {
                     href={item.href}
                     className={`rounded-full px-4 py-2 text-sm font-bold transition-all ${
                       isActive
-                        ? "bg-primary/15 text-primary shadow-[0_0_18px_rgba(34,211,238,0.1)]"
+                        ? "bg-primary/15 text-primary shadow-[0_0_18px_rgba(167,46,32,0.1)]"
                         : "text-muted-foreground hover:bg-white/6 hover:text-foreground"
                     }`}
                   >
@@ -123,7 +123,7 @@ export function Navbar() {
           <div className="flex shrink-0 items-center gap-2 sm:gap-3">
             {me?.user ? (
               <>
-                <div className="arena-chip hidden items-center gap-3 border-primary/20 px-4 py-2 shadow-[0_0_20px_rgba(34,211,238,0.08)] md:flex">
+                <div className="arena-chip hidden items-center gap-3 border-primary/20 px-4 py-2 shadow-[0_0_20px_rgba(167,46,32,0.08)] md:flex">
                   <Coins className="h-4 w-4 text-primary" />
                   <span className="font-mono text-sm font-bold text-primary">{me.user.coinBalance}</span>
                 </div>
@@ -182,7 +182,7 @@ export function Navbar() {
                 <Button variant="ghost" asChild className="arena-chip px-5">
                   <Link href="/login">Log in</Link>
                 </Button>
-                <Button asChild className="rounded-full bg-primary text-primary-foreground shadow-[0_0_24px_rgba(34,211,238,0.18)] hover:bg-primary/90">
+                <Button asChild className="rounded-full bg-primary text-primary-foreground shadow-[0_0_24px_rgba(167,46,32,0.18)] hover:bg-primary/90">
                   <Link href="/signup">Sign Up</Link>
                 </Button>
               </div>
@@ -204,24 +204,20 @@ export function Navbar() {
                 </SheetHeader>
 
                 {me?.user ? (
-                  <div className="mt-5 rounded-3xl border border-primary/15 bg-background/70 p-4 shadow-[0_0_24px_rgba(34,211,238,0.08)]">
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="min-w-0">
-                        <div className="truncate text-lg font-black">{me.user.username}</div>
-                        <div className="truncate text-xs text-muted-foreground">{me.user.email}</div>
-                      </div>
-                      <div className="rounded-full border border-primary/20 bg-primary/10 px-3 py-1 font-mono text-xs font-bold text-primary">
-                        {me.user.coinBalance} coins
-                      </div>
-                    </div>
-                    <div className="mt-3 rounded-2xl border border-white/8 bg-white/5 px-3 py-2 text-xs text-muted-foreground">
-                      Profile and account pages now work best from here on mobile.
-                    </div>
-                  </div>
+                  <MobileAssistantCard
+                    eyebrow="Arena AI"
+                    title={me.user.username}
+                    subtitle={me.user.email}
+                    badge={`${me.user.coinBalance} coins`}
+                    message="I pinned your fastest mobile routes here, so wallet, rewards, and profile actions feel more like a real app than a cramped menu."
+                  />
                 ) : (
-                  <div className="mt-5 rounded-3xl border border-white/8 bg-background/70 p-4 text-sm text-muted-foreground">
-                    Log in to open your account, watch-and-earn, rewards, and match history on mobile.
-                  </div>
+                  <MobileAssistantCard
+                    eyebrow="Arena AI"
+                    title="Guest mode"
+                    subtitle="Mobile onboarding"
+                    message="Log in to unlock wallet balance, watch-and-earn, rewards, and match history from one cleaner command panel."
+                  />
                 )}
 
                 <div className="mt-5 grid gap-2">
@@ -303,5 +299,66 @@ export function Navbar() {
         </div>
       )}
     </>
+  );
+}
+
+function MobileAssistantCard({
+  eyebrow,
+  title,
+  subtitle,
+  message,
+  badge,
+}: {
+  eyebrow: string;
+  title: string;
+  subtitle: string;
+  message: string;
+  badge?: string;
+}) {
+  return (
+    <div className="arena-shell arena-scan mt-5 overflow-hidden border-primary/15 bg-[linear-gradient(180deg,rgba(18,21,28,0.96),rgba(10,12,16,0.92))] p-4 shadow-[0_0_30px_rgba(167,46,32,0.12)]">
+      <div className="flex items-start justify-between gap-3">
+        <div className="flex min-w-0 items-start gap-3">
+          <div className="arena-glow mt-0.5 grid h-11 w-11 shrink-0 place-items-center rounded-2xl border border-primary/25 bg-primary/12 shadow-[0_0_24px_rgba(167,46,32,0.16)]">
+            <Bot className="h-5 w-5 text-primary" />
+          </div>
+          <div className="min-w-0">
+            <div className="flex items-center gap-2">
+              <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-secondary">{eyebrow}</p>
+              <span className="h-2 w-2 rounded-full bg-emerald-400 shadow-[0_0_12px_rgba(74,222,128,0.7)]" />
+            </div>
+            <div className="mt-1 truncate text-lg font-black text-foreground">{title}</div>
+            <div className="truncate text-xs text-muted-foreground">{subtitle}</div>
+          </div>
+        </div>
+        {badge ? (
+          <div className="rounded-full border border-primary/20 bg-primary/10 px-3 py-1 font-mono text-[11px] font-bold text-primary">
+            {badge}
+          </div>
+        ) : (
+          <div className="rounded-full border border-secondary/20 bg-secondary/10 p-2 text-secondary">
+            <Sparkles className="h-4 w-4" />
+          </div>
+        )}
+      </div>
+
+      <div className="mt-4 rounded-[22px] border border-white/8 bg-white/[0.045] p-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
+        <div className="flex items-start gap-3">
+          <div className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-secondary/12 text-secondary">
+            <Sparkles className="h-4 w-4" />
+          </div>
+          <div className="min-w-0">
+            <p className="text-[10px] uppercase tracking-[0.24em] text-muted-foreground">Smart mobile note</p>
+            <p className="mt-1 text-sm leading-6 text-foreground/92">{message}</p>
+          </div>
+        </div>
+      </div>
+
+      <div className="mt-3 flex flex-wrap gap-2 text-[11px] uppercase tracking-[0.2em] text-muted-foreground">
+        <span className="rounded-full border border-white/8 bg-white/[0.04] px-3 py-1">Fast routes</span>
+        <span className="rounded-full border border-white/8 bg-white/[0.04] px-3 py-1">Touch friendly</span>
+        <span className="rounded-full border border-white/8 bg-white/[0.04] px-3 py-1">Live ready</span>
+      </div>
+    </div>
   );
 }
