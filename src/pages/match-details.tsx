@@ -44,11 +44,11 @@ import {
   getDetailsHeroText,
   getLobbyEntryFeeText,
   getScoringRuleText,
+  getSoloCashPayoutLines,
+  getSoloCashPrizePoolInr,
   isFreeRulesMatch,
   isPaidCashSolo,
   isPaidSquadCashMatch,
-  SOLO_CASH_PAYOUT_LINES,
-  SOLO_CASH_PRIZE_POOL_INR,
   SQUAD_CASH_PRIZE_INR,
 } from "@/lib/match-display";
 import { loadRazorpayScript } from "@/lib/razorpay";
@@ -503,7 +503,7 @@ export default function MatchDetailsPage() {
                     <div className="flex items-center justify-center gap-2 text-4xl font-black text-yellow-500">
                       <Trophy className="h-8 w-8" />
                       {isPaidCashSolo(match)
-                        ? `INR ${SOLO_CASH_PRIZE_POOL_INR}`
+                        ? `INR ${getSoloCashPrizePoolInr(match)}`
                         : isPaidSquadCashMatch(match)
                           ? `INR ${SQUAD_CASH_PRIZE_INR}`
                           : "Cash Prize"}
@@ -617,7 +617,7 @@ export default function MatchDetailsPage() {
                     <div className="mt-2 space-y-2 text-sm text-muted-foreground">
                       <p>Top 5 cash payout for this match:</p>
                       <div className="space-y-1">
-                        {SOLO_CASH_PAYOUT_LINES.map((line) => (
+                        {getSoloCashPayoutLines(match).map((line) => (
                           <p key={line}>{line}</p>
                         ))}
                       </div>

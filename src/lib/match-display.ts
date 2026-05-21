@@ -7,15 +7,44 @@ type DisplayMatch = {
   booyahBonus: number;
 };
 
-export const SOLO_CASH_PRIZE_POOL_INR = 750;
-export const SOLO_CASH_PAYOUT_LINES = [
-  "1st: INR 300",
-  "2nd: INR 200",
-  "3rd: INR 100",
-  "4th: INR 50",
-  "5th: INR 50",
-];
 export const SQUAD_CASH_PRIZE_INR = 170;
+
+const SOLO_PAYOUT_CONFIG: Record<
+  number,
+  {
+    prizePoolInr: number;
+    payoutLines: string[];
+    compactPayout: string;
+  }
+> = {
+  10: {
+    prizePoolInr: 200,
+    payoutLines: ["1st: INR 100", "2nd: INR 50", "3rd: INR 50"],
+    compactPayout: "INR 100 / 50 / 50",
+  },
+  20: {
+    prizePoolInr: 750,
+    payoutLines: [
+      "1st: INR 300",
+      "2nd: INR 200",
+      "3rd: INR 100",
+      "4th: INR 50",
+      "5th: INR 50",
+    ],
+    compactPayout: "INR 300 / 200 / 100 / 50 / 50",
+  },
+  25: {
+    prizePoolInr: 900,
+    payoutLines: [
+      "1st: INR 350",
+      "2nd: INR 200",
+      "3rd: INR 150",
+      "4th: INR 100",
+      "5th: INR 100",
+    ],
+    compactPayout: "INR 350 / 200 / 150 / 100 / 100",
+  },
+};
 
 export function isPaidCashSolo(match: DisplayMatch): boolean {
   return match.type === "paid" && match.mode === "solo";
@@ -27,6 +56,18 @@ export function isFreeRulesMatch(match: DisplayMatch): boolean {
 
 export function isPaidSquadCashMatch(match: DisplayMatch): boolean {
   return match.type === "paid" && match.mode === "squad";
+}
+
+export function getSoloCashPrizePoolInr(match: DisplayMatch): number {
+  return SOLO_PAYOUT_CONFIG[match.entryFeeInr]?.prizePoolInr ?? 0;
+}
+
+export function getSoloCashPayoutLines(match: DisplayMatch): string[] {
+  return SOLO_PAYOUT_CONFIG[match.entryFeeInr]?.payoutLines ?? [];
+}
+
+export function getSoloCashCompactPayout(match: DisplayMatch): string {
+  return SOLO_PAYOUT_CONFIG[match.entryFeeInr]?.compactPayout ?? "Cash payout";
 }
 
 export function getScoringRuleText(match: DisplayMatch): string {
@@ -71,7 +112,7 @@ export function getLobbyPrizeText(match: DisplayMatch): string {
   }
 
   if (isPaidCashSolo(match)) {
-    return `INR ${SOLO_CASH_PRIZE_POOL_INR}`;
+    return `INR ${getSoloCashPrizePoolInr(match)}`;
   }
 
   if (isPaidSquadCashMatch(match)) {
@@ -83,7 +124,7 @@ export function getLobbyPrizeText(match: DisplayMatch): string {
 
 export function getLobbyPrizeSubtext(match: DisplayMatch): string | null {
   if (isPaidCashSolo(match)) {
-    return SOLO_CASH_PAYOUT_LINES.join(" • ");
+    return getSoloCashPayoutLines(match).join(" • ");
   }
 
   return null;
@@ -95,7 +136,7 @@ export function getDetailsHeroText(match: DisplayMatch): string {
   }
 
   if (isPaidCashSolo(match)) {
-    return `Cash payout to Top 5 players: ${SOLO_CASH_PAYOUT_LINES.join(", ")}.`;
+    return `Cash payout for this room: ${getSoloCashPayoutLines(match).join(", ")}.`;
   }
 
   if (isPaidSquadCashMatch(match)) {

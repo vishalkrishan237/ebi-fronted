@@ -98,7 +98,7 @@ export default function Home() {
                 transition={{ delay: 0.1 }}
                 className="mt-6 max-w-2xl text-lg leading-8 text-muted-foreground md:text-xl"
               >
-                Build trust from the first screen: clean tournament cards, captain-based Clash Squad registration, transparent coupon values, and a wallet system that feels closer to a real gaming platform.
+                Welcome to Elite Battle India, the ultimate hub for competitive gamers. Compete in high-stakes Free Fire tournaments, climb the leaderboard, and instantly cash out your winnings. Dominate the arena today.
               </motion.p>
               <motion.div
                 initial={{ opacity: 0, y: 18 }}

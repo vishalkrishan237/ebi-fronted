@@ -10,6 +10,7 @@ import { Coins, Users, Trophy, Calendar, Sword, Crosshair, Flame } from "lucide-
 import { format } from "date-fns";
 import { motion } from "framer-motion";
 import {
+  getSoloCashCompactPayout,
   getLobbyEntryFeeText,
   getLobbyPrizeSubtext,
   getLobbyPrizeText,
@@ -132,7 +133,7 @@ export default function LobbyPage() {
                     {isPaidCashSolo(match) && (
                       <div className="flex items-center justify-between bg-background/50 p-2 rounded-md">
                         <span className="flex items-center gap-2"><Trophy className="h-4 w-4" /> Top 5 Payout</span>
-                        <span className="font-medium text-foreground">INR 300 / 200 / 100 / 50 / 50</span>
+                        <span className="font-medium text-foreground">{getSoloCashCompactPayout(match)}</span>
                       </div>
                     )}
                     {isPaidSquadCashMatch(match) && (
