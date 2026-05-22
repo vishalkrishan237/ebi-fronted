@@ -103,27 +103,29 @@ export type PaymentPackage = {
 };
 
 export type PaymentPackageConfig = {
-  provider: "razorpay";
-  keyId: string | null;
+  provider: "cashfree";
+  environment: "sandbox" | "production" | null;
   packages: PaymentPackage[];
 };
 
-export type RazorpayOrderPayload = {
+export type CashfreeOrderPayload = {
   ok: true;
-  keyId: string;
   orderId: string;
-  amountPaise: number;
+  cfOrderId: string;
+  paymentSessionId: string;
+  amountInr: number;
   currency: string;
   package: PaymentPackage;
   paymentId: number;
-  prefill: {
+  environment: "sandbox" | "production";
+  customer: {
     name: string;
     email: string;
-    contact: string;
+    phone: string;
   };
 };
 
-export type RazorpayVerifyPayload = {
+export type CashfreeVerifyPayload = {
   ok: true;
   status: string;
   packageInr: number;
@@ -151,9 +153,11 @@ export type MatchEntryOrderPayload =
   | {
       ok: true;
       requiresPayment: true;
-      keyId: string;
+      environment: "sandbox" | "production";
       orderId: string;
-      amountPaise: number;
+      cfOrderId: string;
+      paymentSessionId: string;
+      amountInr: number;
       currency: string;
       match: {
         id: number;
@@ -163,18 +167,11 @@ export type MatchEntryOrderPayload =
       finalAmountInr: number;
       discountInr: number;
       couponCodeUsed: string | null;
-      prefill: {
-        name: string;
-        email: string;
-        contact: string;
-      };
     };
 
 export type MatchEntryVerifyInput = {
   matchId: number;
-  razorpayOrderId: string;
-  razorpayPaymentId: string;
-  razorpaySignature: string;
+  orderId: string;
 };
 
 export type MatchEntryVerifyPayload = {
@@ -261,24 +258,20 @@ export function usePaymentHistory(enabled = true) {
   });
 }
 
-export function useCreateRazorpayOrder() {
+export function useCreateCashfreeOrder() {
   return useMutation({
     mutationFn: (packageInr: number) =>
-      apiFetch<RazorpayOrderPayload>("/api/payments/razorpay/order", {
+      apiFetch<CashfreeOrderPayload>("/api/payments/cashfree/order", {
         method: "POST",
         body: JSON.stringify({ packageInr }),
       }),
   });
 }
 
-export function useVerifyRazorpayPayment() {
+export function useVerifyCashfreePayment() {
   return useMutation({
-    mutationFn: (input: {
-      razorpayOrderId: string;
-      razorpayPaymentId: string;
-      razorpaySignature: string;
-    }) =>
-      apiFetch<RazorpayVerifyPayload>("/api/payments/razorpay/verify", {
+    mutationFn: (input: { orderId: string }) =>
+      apiFetch<CashfreeVerifyPayload>("/api/payments/cashfree/verify", {
         method: "POST",
         body: JSON.stringify(input),
       }),
@@ -288,7 +281,7 @@ export function useVerifyRazorpayPayment() {
 export function useCreateMatchEntryOrder() {
   return useMutation({
     mutationFn: (input: MatchEntryOrderInput) =>
-      apiFetch<MatchEntryOrderPayload>(`/api/payments/matches/${input.matchId}/razorpay/order`, {
+      apiFetch<MatchEntryOrderPayload>(`/api/payments/matches/${input.matchId}/cashfree/order`, {
         method: "POST",
         body: JSON.stringify({
           couponCode: input.couponCode,
@@ -302,12 +295,10 @@ export function useCreateMatchEntryOrder() {
 export function useVerifyMatchEntryPayment() {
   return useMutation({
     mutationFn: (input: MatchEntryVerifyInput) =>
-      apiFetch<MatchEntryVerifyPayload>(`/api/payments/matches/${input.matchId}/razorpay/verify`, {
+      apiFetch<MatchEntryVerifyPayload>(`/api/payments/matches/${input.matchId}/cashfree/verify`, {
         method: "POST",
         body: JSON.stringify({
-          razorpayOrderId: input.razorpayOrderId,
-          razorpayPaymentId: input.razorpayPaymentId,
-          razorpaySignature: input.razorpaySignature,
+          orderId: input.orderId,
         }),
       }),
   });

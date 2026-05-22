@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useParams, Link } from "wouter";
 import {
   useGetMatch,
@@ -51,7 +51,7 @@ import {
   isPaidSquadCashMatch,
   SQUAD_CASH_PRIZE_INR,
 } from "@/lib/match-display";
-import { loadRazorpayScript } from "@/lib/razorpay";
+import { loadCashfreeScript } from "@/lib/cashfree";
 
 export default function MatchDetailsPage() {
   const params = useParams<{ id: string }>();
@@ -71,6 +71,7 @@ export default function MatchDetailsPage() {
   const [teammateUids, setTeammateUids] = useState(["", "", ""]);
   const [couponInput, setCouponInput] = useState("");
   const [appliedCoupon, setAppliedCoupon] = useState<CouponPreview | null>(null);
+  const handledRedirectOrderId = useRef<string | null>(null);
 
   if (isLoading) {
     return (
@@ -122,6 +123,52 @@ export default function MatchDetailsPage() {
     setCouponInput("");
     setAppliedCoupon(null);
   };
+
+  useEffect(() => {
+    if (!me?.user || !match) {
+      return;
+    }
+
+    const params = new URLSearchParams(window.location.search);
+    const redirectOrderId = params.get("cashfree_order_id");
+    if (!redirectOrderId || handledRedirectOrderId.current === redirectOrderId) {
+      return;
+    }
+
+    handledRedirectOrderId.current = redirectOrderId;
+
+    verifyMatchEntryPayment.mutate(
+      {
+        matchId,
+        orderId: redirectOrderId,
+      },
+      {
+        onSuccess: (verified) => {
+          refreshEntryQueries();
+          toast({
+            title: isSquadInviteMatch ? "Team locked" : "Match Joined",
+            description: verified.couponCodeUsed
+              ? `${verified.match.name} registered with coupon ${verified.couponCodeUsed}.`
+              : `Payment confirmed for ${verified.match.name}.`,
+          });
+        },
+        onError: (error: any) => {
+          toast({
+            title: "Payment status",
+            description:
+              error?.message ??
+              "Payment is still pending. If you already approved it in your UPI app, refresh after a few seconds.",
+            variant: "destructive",
+          });
+        },
+        onSettled: () => {
+          const nextUrl = new URL(window.location.href);
+          nextUrl.searchParams.delete("cashfree_order_id");
+          window.history.replaceState({}, "", `${nextUrl.pathname}${nextUrl.search}${nextUrl.hash}`);
+        },
+      },
+    );
+  }, [isSquadInviteMatch, match, matchId, me?.user, toast, verifyMatchEntryPayment]);
 
   const validateSquadForm = () => {
     if (!teamName.trim()) {
@@ -255,95 +302,69 @@ export default function MatchDetailsPage() {
       return;
     }
 
-    if (finalEntryFeeInr > 0) {
-      const hasSdk = await loadRazorpayScript();
-      if (!hasSdk || !window.Razorpay) {
-        toast({
-          title: "Checkout unavailable",
-          description: "Razorpay checkout could not load.",
-          variant: "destructive",
-        });
-        return;
-      }
-    }
-
-    createMatchEntryOrder.mutate(
-      {
+    try {
+      const result = await createMatchEntryOrder.mutateAsync({
         matchId,
         couponCode: appliedCoupon?.code,
         teamName: squadData?.teamName,
         teammateUids: squadData?.teammateUids,
-      },
-      {
-        onSuccess: (result) => {
-          if (!result.requiresPayment) {
-            refreshEntryQueries();
-            toast({
-              title: isSquadInviteMatch ? "Team locked" : "Match Joined",
-              description: result.couponCodeUsed
-                ? `${match.name} registered using coupon ${result.couponCodeUsed}.`
-                : `You have successfully registered for ${match.name}.`,
-            });
-            resetCouponState();
-            return;
-          }
+      });
 
-          const razorpay = new window.Razorpay!({
-            key: result.keyId,
-            amount: result.amountPaise,
-            currency: result.currency,
-            name: "Elite Battle India",
-            description: isSquadInviteMatch
-              ? `${result.match.name} squad captain entry`
-              : `${result.match.name} tournament entry`,
-            order_id: result.orderId,
-            prefill: result.prefill,
-            theme: {
-              color: "#a72e20",
-            },
-            handler: (response: Record<string, unknown>) => {
-              verifyMatchEntryPayment.mutate(
-                {
-                  matchId,
-                  razorpayOrderId: String(response["razorpay_order_id"] ?? ""),
-                  razorpayPaymentId: String(response["razorpay_payment_id"] ?? ""),
-                  razorpaySignature: String(response["razorpay_signature"] ?? ""),
-                },
-                {
-                  onSuccess: (verified) => {
-                    refreshEntryQueries();
-                    toast({
-                      title: isSquadInviteMatch ? "Team locked" : "Match Joined",
-                      description: verified.couponCodeUsed
-                        ? `${verified.match.name} registered with coupon ${verified.couponCodeUsed}.`
-                        : `Payment confirmed for ${verified.match.name}.`,
-                    });
-                    resetCouponState();
-                  },
-                  onError: (error: any) => {
-                    toast({
-                      title: "Verification failed",
-                      description:
-                        error?.message ?? "Payment completed but match entry verification failed.",
-                      variant: "destructive",
-                    });
-                  },
-                },
-              );
-            },
-          });
+      if (!result.requiresPayment) {
+        refreshEntryQueries();
+        toast({
+          title: isSquadInviteMatch ? "Team locked" : "Match Joined",
+          description: result.couponCodeUsed
+            ? `${match.name} registered using coupon ${result.couponCodeUsed}.`
+            : `You have successfully registered for ${match.name}.`,
+        });
+        resetCouponState();
+        return;
+      }
 
-          razorpay.open();
-        },
-        onError: (error: any) => {
-          toast({
-            title: "Unable to start payment",
-            description: error?.message ?? "Could not create match entry payment.",
-            variant: "destructive",
-          });
-        },
-      },
-    );
+      const hasSdk = await loadCashfreeScript();
+      if (!hasSdk || !window.Cashfree) {
+        throw new Error("Cashfree checkout could not load.");
+      }
+
+      const cashfree = window.Cashfree({
+        mode: result.environment,
+      });
+
+      const checkoutResult = await cashfree.checkout({
+        paymentSessionId: result.paymentSessionId,
+        redirectTarget: "_modal",
+      });
+
+      const verified = await verifyMatchEntryPayment.mutateAsync({
+        matchId,
+        orderId: result.orderId,
+      });
+
+      refreshEntryQueries();
+      toast({
+        title: isSquadInviteMatch ? "Team locked" : "Match Joined",
+        description: verified.couponCodeUsed
+          ? `${verified.match.name} registered with coupon ${verified.couponCodeUsed}.`
+          : `Payment confirmed for ${verified.match.name}.`,
+      });
+      resetCouponState();
+
+      if (checkoutResult.paymentDetails?.paymentMessage) {
+        toast({
+          title: "Payment update",
+          description: checkoutResult.paymentDetails.paymentMessage,
+        });
+      }
+    } catch (error: any) {
+      toast({
+        title: "Payment status",
+        description:
+          error?.message ??
+          "Payment is still pending. If you already approved it in your UPI app, refresh after a few seconds.",
+        variant: "destructive",
+      });
+    }
   };
 
   return (

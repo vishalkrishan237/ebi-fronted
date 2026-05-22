@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useGetMe, useGetRewards, getGetMeQueryKey, getGetRewardsQueryKey } from "@workspace/api-client-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -9,23 +9,71 @@ import { format } from "date-fns";
 import { motion } from "framer-motion";
 import { useToast } from "@/hooks/use-toast";
 import {
-  useCreateRazorpayOrder,
+  useCreateCashfreeOrder,
   usePaymentHistory,
   usePaymentPackages,
-  useVerifyRazorpayPayment,
+  useVerifyCashfreePayment,
 } from "@/lib/platform-api";
-import { loadRazorpayScript } from "@/lib/razorpay";
+import { loadCashfreeScript } from "@/lib/cashfree";
 
 export default function RewardsPage() {
   const { data: me } = useGetMe();
   const { data: transactions, isLoading } = useGetRewards();
   const { data: paymentPackages } = usePaymentPackages(!!me?.user);
   const { data: paymentHistory } = usePaymentHistory(!!me?.user);
-  const createOrder = useCreateRazorpayOrder();
-  const verifyPayment = useVerifyRazorpayPayment();
+  const createOrder = useCreateCashfreeOrder();
+  const verifyPayment = useVerifyCashfreePayment();
   const queryClient = useQueryClient();
   const { toast } = useToast();
   const [activePackageInr, setActivePackageInr] = useState<number | null>(null);
+  const handledRedirectOrderId = useRef<string | null>(null);
+
+  const refreshPaymentQueries = () => {
+    queryClient.invalidateQueries({ queryKey: getGetMeQueryKey() });
+    queryClient.invalidateQueries({ queryKey: getGetRewardsQueryKey() });
+    queryClient.invalidateQueries({ queryKey: ["payment-history"] });
+  };
+
+  useEffect(() => {
+    if (!me?.user) {
+      return;
+    }
+
+    const params = new URLSearchParams(window.location.search);
+    const redirectOrderId = params.get("cashfree_order_id");
+    if (!redirectOrderId || handledRedirectOrderId.current === redirectOrderId) {
+      return;
+    }
+
+    handledRedirectOrderId.current = redirectOrderId;
+
+    verifyPayment.mutate(
+      { orderId: redirectOrderId },
+      {
+        onSuccess: (result) => {
+          refreshPaymentQueries();
+          toast({
+            title: "Top-up successful",
+            description: `${result.packageCoins} coins added to your wallet.`,
+          });
+        },
+        onError: (error: any) => {
+          toast({
+            title: "Payment status",
+            description:
+              error?.message ??
+              "Payment is still pending. If you already approved it in your UPI app, refresh after a few seconds.",
+            variant: "destructive",
+          });
+        },
+        onSettled: () => {
+          const nextUrl = new URL(window.location.href);
+          nextUrl.searchParams.delete("cashfree_order_id");
+          window.history.replaceState({}, "", `${nextUrl.pathname}${nextUrl.search}${nextUrl.hash}`);
+        },
+      },
+    );
+  }, [me?.user, queryClient, toast, verifyPayment]);
 
   const startTopUp = async (packageInr: number) => {
     if (!me?.user) {
@@ -34,71 +82,50 @@ export default function RewardsPage() {
     }
 
     setActivePackageInr(packageInr);
-    const hasSdk = await loadRazorpayScript();
-    if (!hasSdk || !window.Razorpay) {
-      setActivePackageInr(null);
-      toast({ title: "Checkout unavailable", description: "Razorpay checkout could not load.", variant: "destructive" });
-      return;
-    }
 
-    createOrder.mutate(packageInr, {
-      onSuccess: (order) => {
-        const razorpay = new window.Razorpay({
-          key: order.keyId,
-          amount: order.amountPaise,
-          currency: order.currency,
-          name: "Elite Battle India",
-          description: `${order.package.coins} coin top-up`,
-          order_id: order.orderId,
-          prefill: order.prefill,
-          theme: {
-            color: "#22d3ee",
-          },
-          handler: (response: Record<string, unknown>) => {
-            verifyPayment.mutate(
-              {
-                razorpayOrderId: String(response["razorpay_order_id"] ?? ""),
-                razorpayPaymentId: String(response["razorpay_payment_id"] ?? ""),
-                razorpaySignature: String(response["razorpay_signature"] ?? ""),
-              },
-              {
-                onSuccess: (result) => {
-                  queryClient.invalidateQueries({ queryKey: getGetMeQueryKey() });
-                  queryClient.invalidateQueries({ queryKey: getGetRewardsQueryKey() });
-                  queryClient.invalidateQueries({ queryKey: ["payment-history"] });
-                  toast({
-                    title: "Top-up successful",
-                    description: `${result.packageCoins} coins added to your wallet.`,
-                  });
-                  setActivePackageInr(null);
-                },
-                onError: (error: any) => {
-                  toast({
-                    title: "Verification failed",
-                    description: error.message ?? "Payment completed but verification failed.",
-                    variant: "destructive",
-                  });
-                  setActivePackageInr(null);
-                },
-              },
-            );
-          },
-          modal: {
-            ondismiss: () => setActivePackageInr(null),
-          },
-        });
+    try {
+      const order = await createOrder.mutateAsync(packageInr);
+      const hasSdk = await loadCashfreeScript();
+      if (!hasSdk || !window.Cashfree) {
+        throw new Error("Cashfree checkout could not load.");
+      }
 
-        razorpay.open();
-      },
-      onError: (error: any) => {
+      const cashfree = window.Cashfree({
+        mode: order.environment,
+      });
+
+      const checkoutResult = await cashfree.checkout({
+        paymentSessionId: order.paymentSessionId,
+        redirectTarget: "_modal",
+      });
+
+      const verified = await verifyPayment.mutateAsync({
+        orderId: order.orderId,
+      });
+
+      refreshPaymentQueries();
+      toast({
+        title: "Top-up successful",
+        description: `${verified.packageCoins} coins added to your wallet.`,
+      });
+
+      if (checkoutResult.paymentDetails?.paymentMessage) {
         toast({
-          title: "Unable to start payment",
-          description: error.message ?? "Could not create payment order.",
-          variant: "destructive",
+          title: "Payment update",
+          description: checkoutResult.paymentDetails.paymentMessage,
         });
-        setActivePackageInr(null);
-      },
-    });
+      }
+    } catch (error: any) {
+      toast({
+        title: "Payment status",
+        description:
+          error?.message ??
+          "Payment is still pending. If you already approved it in your UPI app, refresh after a few seconds.",
+        variant: "destructive",
+      });
+    } finally {
+      setActivePackageInr(null);
+    }
   };
 
   return (
@@ -128,16 +155,16 @@ export default function RewardsPage() {
                 <IndianRupee className="h-5 w-5 text-primary" />
                 Buy Coin Packages
               </CardTitle>
-              <CardDescription>Real INR payment through Razorpay. Successful payment credits your server wallet automatically.</CardDescription>
+              <CardDescription>Real INR payment through Cashfree. Successful payment credits your server wallet automatically.</CardDescription>
             </CardHeader>
             <CardContent className="p-6">
               {!me?.user ? (
                 <div className="rounded-2xl border border-dashed border-white/10 p-8 text-center text-muted-foreground">
                   Log in first to buy wallet balance.
                 </div>
-              ) : !paymentPackages?.keyId ? (
+              ) : !paymentPackages?.environment ? (
                 <div className="rounded-2xl border border-dashed border-amber-500/30 bg-amber-500/5 p-8 text-center text-sm text-amber-200">
-                  Razorpay keys are not configured in the backend yet.
+                  Cashfree keys are not configured in the backend yet.
                 </div>
               ) : (
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -163,7 +190,7 @@ export default function RewardsPage() {
 
                         <div className="mt-5 text-3xl font-black">{pkg.coins.toLocaleString()} coins</div>
                         <p className="mt-2 text-sm text-muted-foreground">
-                          Add tournament balance instantly after Razorpay confirms your payment.
+                          Add tournament balance instantly after Cashfree confirms your payment.
                         </p>
 
                         <Button
@@ -254,7 +281,7 @@ export default function RewardsPage() {
                 <ShieldCheck className="h-5 w-5 text-primary" />
                 Payment History
               </CardTitle>
-              <CardDescription>Razorpay orders created and verified for your account.</CardDescription>
+              <CardDescription>Cashfree orders created and verified for your account.</CardDescription>
             </CardHeader>
             <CardContent className="p-6">
               {!me?.user ? (
@@ -305,8 +332,8 @@ export default function RewardsPage() {
               <CardTitle>How It Works</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3 p-6 text-sm text-muted-foreground">
-              <p>1. Choose a package and open Razorpay checkout.</p>
-              <p>2. After successful payment, the backend verifies the payment signature.</p>
+              <p>1. Choose a package and open Cashfree checkout.</p>
+              <p>2. After payment, the backend confirms the Cashfree order status.</p>
               <p>3. Verified payments credit coins through the existing wallet ledger.</p>
               <p>4. Those coins can be used for wallet rewards and coupon redemption, while paid match entry now uses direct checkout.</p>
             </CardContent>
