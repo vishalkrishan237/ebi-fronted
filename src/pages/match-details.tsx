@@ -72,43 +72,7 @@ export default function MatchDetailsPage() {
   const [couponInput, setCouponInput] = useState("");
   const [appliedCoupon, setAppliedCoupon] = useState<CouponPreview | null>(null);
   const handledRedirectOrderId = useRef<string | null>(null);
-
-  if (isLoading) {
-    return (
-      <div className="flex min-h-[60vh] items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
-    );
-  }
-
-  if (!match) {
-    return (
-      <div className="container mx-auto p-8 text-center">
-        <h2 className="mb-4 text-2xl font-bold">Match not found</h2>
-        <Button asChild variant="outline">
-          <Link href="/lobby">Back to Lobby</Link>
-        </Button>
-      </div>
-    );
-  }
-
-  const isFull = match.slotsTaken >= match.slots;
-  const isCompleted = match.status === "completed";
-  const originalEntryFeeInr = match.type === "paid" ? match.entryFeeInr : 0;
-  const couponDiscountInr = appliedCoupon
-    ? Math.min(appliedCoupon.valueInr, originalEntryFeeInr)
-    : 0;
-  const finalEntryFeeInr = Math.max(0, originalEntryFeeInr - couponDiscountInr);
-  const myCaptainSquad =
-    match.squads?.find((squad) => squad.captainUserId === me?.user?.id) ?? null;
-  const isSquadInviteMatch = match.isCaptainEntryOnly;
-  const registeredSquads = match.squads?.length ?? 0;
-  const isPaidEntry = match.type === "paid";
-  const isEntryBusy =
-    joinMutation.isPending ||
-    registerSquadMutation.isPending ||
-    createMatchEntryOrder.isPending ||
-    verifyMatchEntryPayment.isPending;
+  const isSquadInviteMatch = match?.isCaptainEntryOnly ?? false;
 
   const refreshEntryQueries = () => {
     queryClient.invalidateQueries({ queryKey: getGetMatchQueryKey(matchId) });
@@ -169,6 +133,42 @@ export default function MatchDetailsPage() {
       },
     );
   }, [isSquadInviteMatch, match, matchId, me?.user, toast, verifyMatchEntryPayment]);
+
+  if (isLoading) {
+    return (
+      <div className="flex min-h-[60vh] items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  if (!match) {
+    return (
+      <div className="container mx-auto p-8 text-center">
+        <h2 className="mb-4 text-2xl font-bold">Match not found</h2>
+        <Button asChild variant="outline">
+          <Link href="/lobby">Back to Lobby</Link>
+        </Button>
+      </div>
+    );
+  }
+
+  const isFull = match.slotsTaken >= match.slots;
+  const isCompleted = match.status === "completed";
+  const originalEntryFeeInr = match.type === "paid" ? match.entryFeeInr : 0;
+  const couponDiscountInr = appliedCoupon
+    ? Math.min(appliedCoupon.valueInr, originalEntryFeeInr)
+    : 0;
+  const finalEntryFeeInr = Math.max(0, originalEntryFeeInr - couponDiscountInr);
+  const myCaptainSquad =
+    match.squads?.find((squad) => squad.captainUserId === me?.user?.id) ?? null;
+  const registeredSquads = match.squads?.length ?? 0;
+  const isPaidEntry = match.type === "paid";
+  const isEntryBusy =
+    joinMutation.isPending ||
+    registerSquadMutation.isPending ||
+    createMatchEntryOrder.isPending ||
+    verifyMatchEntryPayment.isPending;
 
   const validateSquadForm = () => {
     if (!teamName.trim()) {
