@@ -29,7 +29,7 @@ import {
   getGetAdminLogsQueryKey,
 } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
-import { useBootstrapEbiMatches } from "@/lib/platform-api";
+import { useAdminPayments, useBootstrapEbiMatches } from "@/lib/platform-api";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
@@ -59,6 +59,7 @@ import {
   Search,
   ScrollText,
   LayoutDashboard,
+  ReceiptIndianRupee,
 } from "lucide-react";
 
 const CreateMatchBodySchema = z.object({
@@ -133,11 +134,12 @@ export default function AdminPage() {
       </div>
 
       <Tabs defaultValue="overview" className="w-full">
-        <TabsList className="grid w-full grid-cols-5 mb-8 bg-card border border-white/5 h-12">
+        <TabsList className="grid w-full grid-cols-6 mb-8 bg-card border border-white/5 h-12">
           <TabsTrigger value="overview"><LayoutDashboard className="mr-2 h-4 w-4" />Overview</TabsTrigger>
           <TabsTrigger value="matches"><Swords className="mr-2 h-4 w-4" />Matches</TabsTrigger>
           <TabsTrigger value="users"><Users className="mr-2 h-4 w-4" />Users</TabsTrigger>
           <TabsTrigger value="results"><Trophy className="mr-2 h-4 w-4" />Results</TabsTrigger>
+          <TabsTrigger value="payments"><ReceiptIndianRupee className="mr-2 h-4 w-4" />Payments</TabsTrigger>
           <TabsTrigger value="logs"><ScrollText className="mr-2 h-4 w-4" />Logs</TabsTrigger>
         </TabsList>
 
@@ -145,6 +147,7 @@ export default function AdminPage() {
         <TabsContent value="matches"><MatchesSection /></TabsContent>
         <TabsContent value="users"><UsersSection /></TabsContent>
         <TabsContent value="results"><ResultsSection /></TabsContent>
+        <TabsContent value="payments"><PaymentsSection /></TabsContent>
         <TabsContent value="logs"><LogsSection /></TabsContent>
       </Tabs>
     </div>
@@ -687,6 +690,86 @@ function UserDetailDialog({ userId, onClose }: { userId: number; onClose: () => 
 }
 
 // ----- Results -----
+function PaymentsSection() {
+  const { data } = useAdminPayments();
+
+  if (!data) {
+    return <p className="text-muted-foreground">Loading payments…</p>;
+  }
+
+  const cards = [
+    { label: "Total Orders", value: data.summary.total, color: "text-blue-400" },
+    { label: "Captured", value: data.summary.captured, color: "text-green-400" },
+    { label: "Pending", value: data.summary.pending, color: "text-yellow-400" },
+    { label: "Failed", value: data.summary.failed, color: "text-destructive" },
+    { label: "Top-up Revenue", value: `INR ${data.summary.topupRevenueInr}`, color: "text-cyan-400" },
+    { label: "Match Revenue", value: `INR ${data.summary.matchRevenueInr}`, color: "text-primary" },
+  ];
+
+  return (
+    <div className="space-y-6">
+      <div className="grid grid-cols-2 gap-4 md:grid-cols-3">
+        {cards.map((card) => (
+          <Card key={card.label} className="border-white/10 bg-card/50">
+            <CardContent className="p-5">
+              <p className="text-xs uppercase tracking-wide text-muted-foreground">{card.label}</p>
+              <p className={`mt-2 text-2xl font-bold ${card.color}`}>{card.value}</p>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+
+      <Card className="border-white/10 bg-card/50">
+        <CardHeader>
+          <CardTitle>Latest Payment Activity</CardTitle>
+          <CardDescription>Recent Cashfree top-ups and paid match entries, newest first.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          {data.payments.length === 0 ? (
+            <p className="text-sm text-muted-foreground">No payment orders recorded yet.</p>
+          ) : (
+            <div className="space-y-2">
+              {data.payments.map((payment) => (
+                <div key={payment.id} className="rounded-lg border border-white/5 bg-background/30 p-3">
+                  <div className="flex flex-col gap-2 md:flex-row md:items-start md:justify-between">
+                    <div className="min-w-0">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span className="font-semibold">{payment.username}</span>
+                        <Badge variant="outline" className="text-xs">{payment.provider}</Badge>
+                        <Badge variant="outline" className="text-xs">
+                          {payment.purpose === "match_entry" ? "Match entry" : "Wallet top-up"}
+                        </Badge>
+                        {payment.joinMode && <Badge variant="outline" className="text-xs uppercase">{payment.joinMode}</Badge>}
+                        <StatusBadge status={payment.status} />
+                      </div>
+                      <div className="mt-1 text-xs text-muted-foreground break-all">{payment.email}</div>
+                      <div className="mt-2 text-sm">
+                        {payment.purpose === "match_entry"
+                          ? `${payment.matchName ?? "Paid match"} • INR ${payment.packageInr}`
+                          : `Top-up • INR ${payment.packageInr} for ${payment.packageCoins.toLocaleString()} coins`}
+                      </div>
+                      <div className="mt-1 text-xs text-muted-foreground">
+                        Order {payment.providerOrderId}
+                        {payment.providerPaymentId ? ` • Payment ${payment.providerPaymentId}` : ""}
+                        {payment.couponCode ? ` • Coupon ${payment.couponCode}` : ""}
+                      </div>
+                    </div>
+                    <div className="text-xs text-muted-foreground md:text-right">
+                      <div>Created {new Date(payment.createdAt).toLocaleString()}</div>
+                      <div>{payment.verifiedAt ? `Verified ${new Date(payment.verifiedAt).toLocaleString()}` : "Awaiting verification"}</div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
+// ----- Results -----
 function ResultsSection() {
   const { data: matches } = useListMatches();
   const declareMut = useDeclareWinner();
@@ -797,6 +880,9 @@ function StatusBadge({ status }: { status: string }) {
   const cls =
     status === "open" ? "bg-green-500/20 text-green-300 border-green-500/30" :
     status === "live" ? "bg-orange-500/20 text-orange-300 border-orange-500/30" :
+    status === "captured" ? "bg-green-500/20 text-green-300 border-green-500/30" :
+    status === "created" || status === "authorized" ? "bg-yellow-500/20 text-yellow-300 border-yellow-500/30" :
+    status === "failed" ? "bg-destructive/20 text-destructive border-destructive/30" :
     "bg-zinc-500/20 text-zinc-300 border-zinc-500/30";
   return <Badge variant="outline" className={`${cls} text-xs`}>{status}</Badge>;
 }

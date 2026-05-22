@@ -197,6 +197,40 @@ export type PaymentHistoryEntry = {
   verifiedAt: string | null;
 };
 
+export type AdminPaymentEntry = {
+  id: number;
+  username: string;
+  email: string;
+  provider: string;
+  purpose: "wallet_topup" | "match_entry";
+  status: string;
+  packageInr: number;
+  packageCoins: number;
+  amountPaise: number;
+  providerOrderId: string;
+  providerPaymentId: string | null;
+  matchId: number | null;
+  matchName: string | null;
+  couponCode: string | null;
+  joinMode: "solo" | "squad" | null;
+  createdAt: string;
+  verifiedAt: string | null;
+};
+
+export type AdminPaymentSummary = {
+  total: number;
+  captured: number;
+  pending: number;
+  failed: number;
+  topupRevenueInr: number;
+  matchRevenueInr: number;
+};
+
+export type AdminPaymentsPayload = {
+  summary: AdminPaymentSummary;
+  payments: AdminPaymentEntry[];
+};
+
 export function useWatchRewardVideos(enabled = true) {
   return useQuery({
     queryKey: ["watch-reward-videos"],
@@ -337,5 +371,13 @@ export function useBootstrapEbiMatches() {
       }>("/api/admin/matches/bootstrap-ebi", {
         method: "POST",
       }),
+  });
+}
+
+export function useAdminPayments(enabled = true) {
+  return useQuery({
+    queryKey: ["admin-payments"],
+    queryFn: () => apiFetch<AdminPaymentsPayload>("/api/admin/payments"),
+    enabled,
   });
 }
