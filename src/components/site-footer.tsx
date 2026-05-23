@@ -33,7 +33,7 @@ export function SiteFooter() {
               Public tournament rules, support contact, refund terms, and fair-play standards are published here so players, reviewers, and payment teams can understand exactly how the platform operates.
             </p>
             <div className="mt-5 text-sm text-muted-foreground">
-              Support: <a href="mailto:vishalkrishan2212@gmail.com" className="text-foreground underline decoration-white/20 underline-offset-4">vishalkrishan2212@gmail.com</a>
+              Support: <a href="mailto:vishalkrishan564@gmail.com" className="text-foreground underline decoration-white/20 underline-offset-4">vishalkrishan564@gmail.com</a>
             </div>
           </div>
 

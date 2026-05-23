@@ -13,12 +13,14 @@ export function PolicyShell({
   summary,
   sections,
   sideNote,
+  supportEmail = "vishalkrishan564@gmail.com",
 }: {
   eyebrow: string;
   title: string;
   summary: string;
   sections: PolicySection[];
   sideNote?: React.ReactNode;
+  supportEmail?: string;
 }) {
   return (
     <div className="container mx-auto max-w-6xl px-4 py-10 md:py-14">
@@ -73,7 +75,7 @@ export function PolicyShell({
             <div className="mt-4 flex items-center gap-3 rounded-2xl border border-white/8 bg-background/35 p-4">
               <Mail className="h-5 w-5 text-secondary" />
               <div>
-                <div className="font-semibold">vishalkrishan2212@gmail.com</div>
+                <div className="font-semibold">{supportEmail}</div>
                 <div className="text-xs text-muted-foreground">Support, disputes, compliance queries</div>
               </div>
             </div>
