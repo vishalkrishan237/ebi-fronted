@@ -3,7 +3,7 @@ import { Link, useLocation } from "wouter";
 import { useGetMe, useLogout, getGetMeQueryKey } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
-import { Bot, Coins, Gift, History, Home, LogOut, Menu, PlaySquare, Shield, Sparkles, Trophy, UserCircle } from "lucide-react";
+import { Bot, Coins, Gift, Headset, History, Home, LogOut, Menu, PlaySquare, Shield, Sparkles, Trophy, UserCircle } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -38,11 +38,13 @@ const MOBILE_MENU_ITEMS = [
   { href: "/history", label: "History", icon: History },
   { href: "/coupons", label: "Rewards", icon: Gift },
   { href: "/profile", label: "Profile", icon: UserCircle },
+  { href: "/support", label: "Support", icon: Headset },
 ];
 
 const MOBILE_GUEST_ITEMS = [
   { href: "/", label: "Home", icon: Home },
   { href: "/lobby", label: "Lobby", icon: Trophy },
+  { href: "/support", label: "Support", icon: Headset },
   { href: "/login", label: "Log In", icon: UserCircle },
   { href: "/signup", label: "Sign Up", icon: Shield },
 ];
@@ -160,6 +162,11 @@ export function Navbar() {
                     <DropdownMenuItem asChild>
                       <Link href="/rewards" className="w-full cursor-pointer">
                         Wallet Activity
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <Link href="/support" className="w-full cursor-pointer">
+                        Support & Appeals
                       </Link>
                     </DropdownMenuItem>
                     {me.user.isAdmin && (

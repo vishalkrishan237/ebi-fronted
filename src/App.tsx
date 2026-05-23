@@ -16,6 +16,11 @@ import HistoryPage from "@/pages/history";
 import CouponsPage from "@/pages/coupons";
 import AdminPage from "@/pages/admin";
 import WatchEarnPage from "@/pages/watch-earn";
+import TermsPage from "@/pages/terms";
+import PrivacyPage from "@/pages/privacy";
+import RefundPolicyPage from "@/pages/refund-policy";
+import FairPlayPage from "@/pages/fair-play";
+import SupportPage from "@/pages/support";
 
 const queryClient = new QueryClient();
 
@@ -35,6 +40,11 @@ function Router() {
         <Route path="/coupons" component={CouponsPage} />
         <Route path="/watch-earn" component={WatchEarnPage} />
         <Route path="/admin" component={AdminPage} />
+        <Route path="/terms" component={TermsPage} />
+        <Route path="/privacy" component={PrivacyPage} />
+        <Route path="/refund-policy" component={RefundPolicyPage} />
+        <Route path="/fair-play" component={FairPlayPage} />
+        <Route path="/support" component={SupportPage} />
         <Route component={NotFound} />
       </Switch>
     </Layout>
