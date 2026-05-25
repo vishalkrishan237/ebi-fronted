@@ -11,7 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Trophy, Mail, Lock, User, Hash, Gift } from "lucide-react";
+import { Trophy, Mail, Lock, User, Hash } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 const LoginFormSchema = z.object({
@@ -24,13 +24,6 @@ const SignupFormSchema = z.object({
   email: z.string().email().max(254),
   freeFireUid: z.string().min(6).max(15).regex(/^[0-9]+$/),
   password: z.string().min(6).max(128),
-  referralCode: z
-    .string()
-    .trim()
-    .max(64)
-    .transform((value) => value.toUpperCase())
-    .optional()
-    .or(z.literal("")),
 });
 
 export default function AuthPage() {
@@ -53,7 +46,6 @@ export default function AuthPage() {
       email: "",
       freeFireUid: "",
       password: "",
-      referralCode: "",
     },
   });
 
@@ -79,8 +71,8 @@ export default function AuthPage() {
       {
         onSuccess: () => {
           queryClient.invalidateQueries({ queryKey: getGetMeQueryKey() });
-          toast({ title: "Operator created", description: "Your wallet and referral code are ready." });
-          setLocation("/watch-earn");
+          toast({ title: "Player account created", description: "Your EBI player account is ready." });
+          setLocation("/lobby");
         },
         onError: (err: any) => {
           toast({ variant: "destructive", title: "Signup failed", description: err.message || "Could not create account." });
@@ -102,7 +94,7 @@ export default function AuthPage() {
               <Trophy className="h-7 w-7 text-primary" />
             </div>
             <CardTitle className="text-3xl font-black">Arena Access</CardTitle>
-            <CardDescription>Secure wallet identity, verified tournament access, and referral growth in one account.</CardDescription>
+            <CardDescription>Create your player account, save your Free Fire UID, and use WhatsApp to confirm paid room entry with the admin.</CardDescription>
           </CardHeader>
           <CardContent className="p-6">
             <Tabs defaultValue="login" className="w-full">
@@ -143,7 +135,6 @@ export default function AuthPage() {
                     <FieldWithIcon control={signupForm.control} name="email" label="Email" placeholder="operator@example.com" icon={Mail} />
                     <FieldWithIcon control={signupForm.control} name="freeFireUid" label="Free Fire UID" placeholder="123456789" icon={Hash} />
                     <FieldWithIcon control={signupForm.control} name="password" label="Password" placeholder="Set a strong password" icon={Lock} type="password" />
-                    <FieldWithIcon control={signupForm.control} name="referralCode" label="Referral Code" placeholder="Optional invite code" icon={Gift} />
                     <Button type="submit" className="w-full rounded-full bg-primary text-primary-foreground hover:bg-primary/90" disabled={signupMutation.isPending}>
                       {signupMutation.isPending ? "Provisioning..." : "Create Account"}
                     </Button>

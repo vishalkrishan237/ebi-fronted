@@ -5,7 +5,7 @@ export default function FairPlayPage() {
     <PolicyShell
       eyebrow="Policy"
       title="Fair Play Policy"
-      summary="Competitive integrity is the center of Elite Battle India. This policy explains how cheating, false identities, duplicate accounts, squad abuse, and payment fraud are handled."
+      summary="Competitive integrity is the center of Elite Battle India. This policy explains how cheating, false identities, duplicate accounts, squad abuse, and manual payment fraud are handled."
       sections={[
         {
           title: "1. Core fair-play rule",
@@ -17,7 +17,7 @@ export default function FairPlayPage() {
           title: "2. Prohibited conduct",
           body: [
             "The following may lead to removal, refund denial, prize cancellation, suspension, or permanent bans: hacks, emulator or tool abuse where prohibited, identity swapping, ghost accounts, fake UIDs, collusion, intentional result manipulation, or false winner claims.",
-            "Players must not create multiple accounts to collect signup rewards, referral bonuses, coupon value, or duplicate tournament entries. Captains must not submit teammate UIDs that do not belong to valid and consenting players.",
+            "Players must not create multiple accounts to claim duplicate tournament entries or fake payment approval. Captains must not submit teammate UIDs that do not belong to valid and consenting players.",
           ],
         },
         {
@@ -37,7 +37,7 @@ export default function FairPlayPage() {
         {
           title: "5. Penalties",
           body: [
-            "Penalties can include warnings, room cancellation, removal from a tournament, refund refusal, coupon reversal, wallet adjustment, suspension, permanent account bans, and blocking future reward or payout processing.",
+            "Penalties can include warnings, room cancellation, removal from a tournament, refund refusal, suspension, permanent account bans, and blocking future paid-room processing.",
             "Serious fraud or payment abuse may also be reported to payment or fraud-monitoring partners where necessary to protect the platform.",
           ],
         },

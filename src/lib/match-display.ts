@@ -5,69 +5,80 @@ type DisplayMatch = {
   entryFeeInr: number;
   payoutPerKill: number;
   booyahBonus: number;
+  prize: number;
+  isCaptainEntryOnly?: boolean;
 };
 
 export const SQUAD_CASH_PRIZE_INR = 170;
+const DEFAULT_SOLO_ENTRY_FEE_INR = 10;
 
-const SOLO_PAYOUT_CONFIG: Record<
-  number,
-  {
-    prizePoolInr: number;
-    payoutLines: string[];
-    compactPayout: string;
-  }
-> = {
-  10: {
-    prizePoolInr: 200,
-    payoutLines: ["1st: INR 100", "2nd: INR 50", "3rd: INR 50"],
-    compactPayout: "INR 100 / 50 / 50",
-  },
-  20: {
-    prizePoolInr: 750,
-    payoutLines: [
-      "1st: INR 300",
-      "2nd: INR 200",
-      "3rd: INR 100",
-      "4th: INR 50",
-      "5th: INR 50",
-    ],
-    compactPayout: "INR 300 / 200 / 100 / 50 / 50",
-  },
-  25: {
-    prizePoolInr: 900,
-    payoutLines: [
-      "1st: INR 350",
-      "2nd: INR 200",
-      "3rd: INR 150",
-      "4th: INR 100",
-      "5th: INR 100",
-    ],
-    compactPayout: "INR 350 / 200 / 150 / 100 / 100",
-  },
-};
+const SOLO_PAYOUT_CONFIG = {
+  10: [
+    "1st: INR 100",
+    "2nd: INR 50",
+    "3rd: INR 50",
+  ],
+  20: [
+    "1st: INR 300",
+    "2nd: INR 200",
+    "3rd: INR 100",
+    "4th: INR 50",
+    "5th: INR 50",
+  ],
+  25: [
+    "1st: INR 350",
+    "2nd: INR 200",
+    "3rd: INR 150",
+    "4th: INR 100",
+    "5th: INR 100",
+  ],
+} as const;
 
-export function isPaidCashSolo(match: DisplayMatch): boolean {
-  return match.type === "paid" && match.mode === "solo";
-}
+const COMMUNITY_ENTRY_TEXT =
+  "Join the EBI WhatsApp community, follow the channel, then DM the admin personally to confirm your slot and UPI payment.";
 
 export function isFreeRulesMatch(match: DisplayMatch): boolean {
-  return match.type === "free";
+  return false;
+}
+
+export function isPaidCashSolo(match: DisplayMatch): boolean {
+  return match.mode === "solo";
 }
 
 export function isPaidSquadCashMatch(match: DisplayMatch): boolean {
-  return match.type === "paid" && match.mode === "squad";
+  return match.mode === "squad";
+}
+
+function getEffectiveEntryFeeInr(match: DisplayMatch): number {
+  if (match.entryFeeInr > 0) {
+    return match.entryFeeInr;
+  }
+
+  if (match.mode === "squad") {
+    return 100;
+  }
+
+  return DEFAULT_SOLO_ENTRY_FEE_INR;
 }
 
 export function getSoloCashPrizePoolInr(match: DisplayMatch): number {
-  return SOLO_PAYOUT_CONFIG[match.entryFeeInr]?.prizePoolInr ?? 0;
+  const entryFeeInr = getEffectiveEntryFeeInr(match);
+  if (entryFeeInr === 10) return 200;
+  if (entryFeeInr === 20) return 700;
+  if (entryFeeInr === 25) return 900;
+  return match.prize || 0;
 }
 
 export function getSoloCashPayoutLines(match: DisplayMatch): string[] {
-  return SOLO_PAYOUT_CONFIG[match.entryFeeInr]?.payoutLines ?? [];
+  const entryFeeInr = getEffectiveEntryFeeInr(match);
+  if (entryFeeInr === 10) return [...SOLO_PAYOUT_CONFIG[10]];
+  if (entryFeeInr === 20) return [...SOLO_PAYOUT_CONFIG[20]];
+  if (entryFeeInr === 25) return [...SOLO_PAYOUT_CONFIG[25]];
+  return ["Prize confirmed by admin in WhatsApp"];
 }
 
 export function getSoloCashCompactPayout(match: DisplayMatch): string {
-  return SOLO_PAYOUT_CONFIG[match.entryFeeInr]?.compactPayout ?? "Cash payout";
+  return getSoloCashPayoutLines(match).join(" • ");
 }
 
 export function getScoringRuleText(match: DisplayMatch): string {
@@ -75,51 +86,35 @@ export function getScoringRuleText(match: DisplayMatch): string {
 }
 
 export function getLobbySummaryText(match: DisplayMatch): string {
-  if (isFreeRulesMatch(match)) {
-    return getScoringRuleText(match);
+  if (isPaidSquadCashMatch(match) || match.isCaptainEntryOnly) {
+    return "Captain 1 locks 4 seats after manual UPI payment in WhatsApp. Captain 2 pays next and fills the other 4 seats for the same Clash Squad room.";
   }
 
   if (isPaidCashSolo(match)) {
-    return "Cash tournament for Top 5 players. Entry is shown in INR and payouts are listed on the card.";
+    return COMMUNITY_ENTRY_TEXT;
   }
 
-  if (isPaidSquadCashMatch(match)) {
-    return "Captain 1 pays once to lock 4 seats. Captain 2 pays once to lock the other 4 seats. One match starts with 2 full Clash Squad teams.";
-  }
-
-  return getScoringRuleText(match);
+  return COMMUNITY_ENTRY_TEXT;
 }
 
 export function getLobbyEntryFeeText(match: DisplayMatch): string {
-  if (match.type === "free") {
-    return "FREE";
-  }
-
-  return match.entryFeeInr > 0 ? `INR ${match.entryFeeInr}` : "Paid";
+  return `INR ${getEffectiveEntryFeeInr(match)}`;
 }
 
-export function getLobbyPrizeTitle(match: DisplayMatch): string {
-  if (isFreeRulesMatch(match)) {
-    return "Match Rules";
-  }
-
+export function getLobbyPrizeTitle(_match: DisplayMatch): string {
   return "Prize Pool";
 }
 
 export function getLobbyPrizeText(match: DisplayMatch): string {
-  if (isFreeRulesMatch(match)) {
-    return getScoringRuleText(match);
+  if (isPaidSquadCashMatch(match) || match.isCaptainEntryOnly) {
+    return `INR ${SQUAD_CASH_PRIZE_INR}`;
   }
 
   if (isPaidCashSolo(match)) {
     return `INR ${getSoloCashPrizePoolInr(match)}`;
   }
 
-  if (isPaidSquadCashMatch(match)) {
-    return `INR ${SQUAD_CASH_PRIZE_INR}`;
-  }
-
-  return "Cash Prize";
+  return "Manual confirmation";
 }
 
 export function getLobbyPrizeSubtext(match: DisplayMatch): string | null {
@@ -127,21 +122,21 @@ export function getLobbyPrizeSubtext(match: DisplayMatch): string | null {
     return getSoloCashPayoutLines(match).join(" • ");
   }
 
+  if (isPaidSquadCashMatch(match) || match.isCaptainEntryOnly) {
+    return "Two captains, two teams, one 4v4 room.";
+  }
+
   return null;
 }
 
 export function getDetailsHeroText(match: DisplayMatch): string {
-  if (isFreeRulesMatch(match)) {
-    return getScoringRuleText(match);
+  if (isPaidSquadCashMatch(match) || match.isCaptainEntryOnly) {
+    return "Join the EBI WhatsApp community, DM the admin with your squad name and 3 teammate UIDs, then confirm manual UPI payment to lock your 4-player team.";
   }
 
   if (isPaidCashSolo(match)) {
-    return `Cash payout for this room: ${getSoloCashPayoutLines(match).join(", ")}.`;
+    return `Join through WhatsApp community. DM the admin personally, confirm your manual UPI payment, and play for ${getSoloCashCompactPayout(match)}.`;
   }
 
-  if (isPaidSquadCashMatch(match)) {
-    return "Captain 1 pays once and submits 3 teammate UIDs to create the first team. Captain 2 does the same for the second team. Total Clash Squad prize pool: INR 170.";
-  }
-
-  return getScoringRuleText(match);
+  return COMMUNITY_ENTRY_TEXT;
 }

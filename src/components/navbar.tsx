@@ -3,7 +3,7 @@ import { Link, useLocation } from "wouter";
 import { useGetMe, useLogout, getGetMeQueryKey } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
-import { Bot, Coins, Gift, Headset, History, Home, LogOut, Menu, PlaySquare, Shield, Sparkles, Trophy, UserCircle } from "lucide-react";
+import { Bot, Headset, History, Home, LogOut, Menu, MessageCircle, Shield, Sparkles, Trophy, UserCircle } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -21,22 +21,20 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
+import { EBI_WHATSAPP_COMMUNITY_URL } from "@/lib/community";
 
 const NAV_ITEMS = [
   { href: "/lobby", label: "Lobby" },
-  { href: "/watch-earn", label: "Watch & Earn" },
   { href: "/leaderboard", label: "Leaderboard" },
   { href: "/history", label: "History" },
-  { href: "/coupons", label: "Rewards" },
+  { href: "/support", label: "Support" },
 ];
 
 const MOBILE_MENU_ITEMS = [
   { href: "/", label: "Home", icon: Home },
   { href: "/lobby", label: "Lobby", icon: Trophy },
-  { href: "/watch-earn", label: "Watch & Earn", icon: PlaySquare },
   { href: "/leaderboard", label: "Leaderboard", icon: Trophy },
   { href: "/history", label: "History", icon: History },
-  { href: "/coupons", label: "Rewards", icon: Gift },
   { href: "/profile", label: "Profile", icon: UserCircle },
   { href: "/support", label: "Support", icon: Headset },
 ];
@@ -70,7 +68,7 @@ export function Navbar() {
     ? [
         { href: "/", label: "Home", icon: Home },
         { href: "/lobby", label: "Lobby", icon: Trophy },
-        { href: "/watch-earn", label: "Earn", icon: PlaySquare },
+        { href: "/support", label: "Support", icon: Headset },
         { href: "/profile", label: "Profile", icon: UserCircle },
       ]
     : MOBILE_GUEST_ITEMS;
@@ -123,67 +121,57 @@ export function Navbar() {
           </div>
 
           <div className="flex shrink-0 items-center gap-2 sm:gap-3">
+            <Button asChild variant="outline" className="hidden rounded-full border-primary/20 bg-background/50 text-foreground hover:bg-primary/10 lg:flex">
+              <a href={EBI_WHATSAPP_COMMUNITY_URL} target="_blank" rel="noreferrer">
+                <MessageCircle className="mr-2 h-4 w-4 text-primary" />
+                WhatsApp Community
+              </a>
+            </Button>
+
             {me?.user ? (
-              <>
-                <div className="arena-chip hidden items-center gap-3 border-primary/20 px-4 py-2 shadow-[0_0_20px_rgba(167,46,32,0.08)] md:flex">
-                  <Coins className="h-4 w-4 text-primary" />
-                  <span className="font-mono text-sm font-bold text-primary">{me.user.coinBalance}</span>
-                </div>
-
-                <div className="arena-chip flex items-center gap-2 border-primary/15 px-3 py-2 md:hidden">
-                  <Coins className="h-4 w-4 text-primary" />
-                  <span className="font-mono text-xs font-bold text-primary">{me.user.coinBalance}</span>
-                </div>
-
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" className="arena-chip hidden h-11 px-3 lg:flex">
-                      <UserCircle className="h-5 w-5" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent className="w-64 border-white/8 bg-card/95" align="end">
-                    <DropdownMenuLabel className="font-normal">
-                      <div className="space-y-1">
-                        <p className="text-sm font-bold">{me.user.username}</p>
-                        <p className="text-xs text-muted-foreground">{me.user.email}</p>
-                      </div>
-                    </DropdownMenuLabel>
-                    <DropdownMenuSeparator />
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" className="arena-chip hidden h-11 px-3 lg:flex">
+                    <UserCircle className="h-5 w-5" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent className="w-64 border-white/8 bg-card/95" align="end">
+                  <DropdownMenuLabel className="font-normal">
+                    <div className="space-y-1">
+                      <p className="text-sm font-bold">{me.user.username}</p>
+                      <p className="text-xs text-muted-foreground">{me.user.email}</p>
+                    </div>
+                  </DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem asChild>
+                    <Link href="/profile" className="w-full cursor-pointer">
+                      Profile
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link href="/support" className="w-full cursor-pointer">
+                      Support & Appeals
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <a href={EBI_WHATSAPP_COMMUNITY_URL} target="_blank" rel="noreferrer" className="w-full cursor-pointer">
+                      WhatsApp Community
+                    </a>
+                  </DropdownMenuItem>
+                  {me.user.isAdmin && (
                     <DropdownMenuItem asChild>
-                      <Link href="/watch-earn" className="w-full cursor-pointer">
-                        Watch & Earn
+                      <Link href="/admin" className="w-full cursor-pointer">
+                        Admin Control
                       </Link>
                     </DropdownMenuItem>
-                    <DropdownMenuItem asChild>
-                      <Link href="/profile" className="w-full cursor-pointer">
-                        Profile
-                      </Link>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem asChild>
-                      <Link href="/rewards" className="w-full cursor-pointer">
-                        Wallet Activity
-                      </Link>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem asChild>
-                      <Link href="/support" className="w-full cursor-pointer">
-                        Support & Appeals
-                      </Link>
-                    </DropdownMenuItem>
-                    {me.user.isAdmin && (
-                      <DropdownMenuItem asChild>
-                        <Link href="/admin" className="w-full cursor-pointer">
-                          Admin Control
-                        </Link>
-                      </DropdownMenuItem>
-                    )}
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem onClick={handleLogout} className="cursor-pointer text-destructive focus:text-destructive">
-                      <LogOut className="mr-2 h-4 w-4" />
-                      Log out
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </>
+                  )}
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={handleLogout} className="cursor-pointer text-destructive focus:text-destructive">
+                    <LogOut className="mr-2 h-4 w-4" />
+                    Log out
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             ) : (
               <div className="hidden items-center gap-2 sm:flex">
                 <Button variant="ghost" asChild className="arena-chip px-5">
@@ -206,7 +194,7 @@ export function Navbar() {
                 <SheetHeader className="border-b border-white/8 pb-4 text-left">
                   <SheetTitle className="text-left text-xl font-black tracking-tight">Mobile Command Deck</SheetTitle>
                   <SheetDescription className="text-left">
-                    Fast access to matches, rewards, profile, and the rest of the arena from your phone.
+                    Fast access to matches, support, profile, and the WhatsApp community from your phone.
                   </SheetDescription>
                 </SheetHeader>
 
@@ -215,15 +203,15 @@ export function Navbar() {
                     eyebrow="Arena AI"
                     title={me.user.username}
                     subtitle={me.user.email}
-                    badge={`${me.user.coinBalance} coins`}
-                    message="I pinned your fastest mobile routes here, so wallet, rewards, and profile actions feel more like a real app than a cramped menu."
+                    badge="Community flow"
+                    message="Every room is confirmed through WhatsApp now, so the fastest path is lobby, community link, support, and your player profile."
                   />
                 ) : (
                   <MobileAssistantCard
                     eyebrow="Arena AI"
                     title="Guest mode"
                     subtitle="Mobile onboarding"
-                    message="Log in to unlock wallet balance, watch-and-earn, rewards, and match history from one cleaner command panel."
+                    message="Create your player account, open the lobby, then jump into the WhatsApp community to reserve your room and talk to the admin."
                   />
                 )}
 
@@ -252,6 +240,19 @@ export function Navbar() {
                     );
                   })}
                 </div>
+
+                <a
+                  href={EBI_WHATSAPP_COMMUNITY_URL}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="mt-5 flex items-center justify-between rounded-2xl border border-primary/20 bg-primary/10 px-4 py-3 text-primary transition-all hover:bg-primary/15"
+                >
+                  <div className="flex items-center gap-3">
+                    <MessageCircle className="h-4 w-4" />
+                    <span className="font-semibold">Join WhatsApp Community</span>
+                  </div>
+                  <span className="text-xs uppercase tracking-[0.24em]">Open</span>
+                </a>
 
                 {me?.user ? (
                   <Button
@@ -363,8 +364,8 @@ function MobileAssistantCard({
 
       <div className="mt-3 flex flex-wrap gap-2 text-[11px] uppercase tracking-[0.2em] text-muted-foreground">
         <span className="rounded-full border border-white/8 bg-white/[0.04] px-3 py-1">Fast routes</span>
+        <span className="rounded-full border border-white/8 bg-white/[0.04] px-3 py-1">WhatsApp flow</span>
         <span className="rounded-full border border-white/8 bg-white/[0.04] px-3 py-1">Touch friendly</span>
-        <span className="rounded-full border border-white/8 bg-white/[0.04] px-3 py-1">Live ready</span>
       </div>
     </div>
   );

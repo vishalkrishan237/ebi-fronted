@@ -5,16 +5,17 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Coins, Hash, Mail, Sword, Trophy, Clock, ChevronRight } from "lucide-react";
+import { Hash, Mail, MessageCircle, Sword, Trophy, Clock, ChevronRight } from "lucide-react";
 import { format } from "date-fns";
 import { motion } from "framer-motion";
+import { EBI_WHATSAPP_COMMUNITY_URL } from "@/lib/community";
 
 function formatMatchFee(entryFee: number) {
-  return entryFee === 0 ? "Free" : `${entryFee.toLocaleString()} coins`;
+  return entryFee > 0 ? "Paid entry confirmed manually" : "Community entry";
 }
 
 function formatMatchPrize(prize: number) {
-  return prize === 0 ? "Rule-based" : `${prize.toLocaleString()} coins`;
+  return prize > 0 ? "Prize pool configured" : "Prize confirmed by admin";
 }
 
 export default function ProfilePage() {
@@ -25,7 +26,6 @@ export default function ProfilePage() {
 
   const { user, joinedMatches } = profile;
   const matchesWon = joinedMatches.filter((match) => match.wonByMe).length;
-  const totalWinnings = joinedMatches.filter((match) => match.wonByMe).reduce((sum, match) => sum + match.prize, 0);
 
   return (
     <div className="container mx-auto max-w-6xl px-4 py-6 sm:py-8">
@@ -33,7 +33,7 @@ export default function ProfilePage() {
         <div className="text-[11px] font-bold uppercase tracking-[0.3em] text-primary/80">Player Account</div>
         <h1 className="text-3xl font-black tracking-tight text-foreground sm:text-4xl">Profile Control Room</h1>
         <p className="max-w-2xl text-sm text-muted-foreground sm:text-base">
-          Your mobile account view now keeps UID, balance, winnings, and match activity easy to read without horizontal squeezing.
+          Keep your Free Fire UID, account identity, and recent room activity in one place while room confirmation stays inside the EBI WhatsApp community.
         </p>
       </div>
 
@@ -75,10 +75,10 @@ export default function ProfilePage() {
 
                   <div className="rounded-2xl border border-primary/15 bg-primary/10 p-3">
                     <div className="mb-1 flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.22em] text-primary/90">
-                      <Coins className="h-3.5 w-3.5" />
-                      Wallet Balance
+                      <MessageCircle className="h-3.5 w-3.5" />
+                      Match Support
                     </div>
-                    <div className="text-lg font-black text-primary">{user.coinBalance.toLocaleString()} coins</div>
+                    <div className="text-sm font-semibold text-foreground">Join the community and DM the admin for room confirmation.</div>
                   </div>
                 </div>
               </div>
@@ -100,11 +100,14 @@ export default function ProfilePage() {
 
           <Card className="rounded-3xl border-white/10 bg-card/60">
             <CardContent className="p-5">
-              <div className="text-[11px] font-bold uppercase tracking-[0.22em] text-muted-foreground">Total Winnings</div>
-              <div className="mt-2 text-2xl font-black text-yellow-500">{totalWinnings.toLocaleString()} coins</div>
+              <div className="text-[11px] font-bold uppercase tracking-[0.22em] text-muted-foreground">Community Link</div>
+              <div className="mt-2 text-lg font-black text-primary">WhatsApp Confirmed Rooms</div>
               <p className="mt-2 text-sm text-muted-foreground">
-                Winning rewards from completed matches show up here so mobile players can check progress quickly.
+                Use the WhatsApp community for announcements, UPI payment confirmation, and manual room support.
               </p>
+              <Button asChild className="mt-4 rounded-full bg-primary text-primary-foreground hover:bg-primary/90">
+                <a href={EBI_WHATSAPP_COMMUNITY_URL} target="_blank" rel="noreferrer">Open Community</a>
+              </Button>
             </CardContent>
           </Card>
         </div>
@@ -113,13 +116,13 @@ export default function ProfilePage() {
           <Card className="h-full rounded-[2rem] border-white/10 bg-card/50">
             <CardHeader className="border-b border-white/5 pb-4">
               <CardTitle className="text-xl font-black sm:text-2xl">Match History</CardTitle>
-              <p className="text-sm text-muted-foreground">Every joined match is grouped into mobile-sized cards with the important details first.</p>
+              <p className="text-sm text-muted-foreground">Your joined rooms are grouped here, while entry confirmation continues manually through the admin and community chat.</p>
             </CardHeader>
             <CardContent className="p-0">
               {joinedMatches.length === 0 ? (
                 <div className="p-10 text-center text-muted-foreground sm:p-12">
                   <Sword className="mx-auto mb-4 h-12 w-12 opacity-20" />
-                  <p>You haven&apos;t joined any matches yet.</p>
+                  <p>You have not joined any matches yet.</p>
                   <Button asChild className="mt-4 rounded-full" variant="outline">
                     <Link href="/lobby">Browse Lobby</Link>
                   </Button>

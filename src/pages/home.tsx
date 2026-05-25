@@ -2,64 +2,56 @@ import React from "react";
 import { Link } from "wouter";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import {
-  CalendarClock,
-  ChevronRight,
-  Coins,
-  Crosshair,
-  Shield,
-  Ticket,
-  Trophy,
-  Users,
-} from "lucide-react";
+import { CalendarClock, ChevronRight, MessageCircle, Shield, Trophy, Users } from "lucide-react";
+import { EBI_WHATSAPP_COMMUNITY_URL } from "@/lib/community";
 
 const featureCards = [
   {
     icon: Trophy,
     title: "Daily Match Queue",
-    copy: "Solo rooms, cash tournaments, and Clash Squad fixtures are laid out like a proper event board instead of a random game list.",
+    copy: "Solo rooms and Clash Squad fixtures are posted with cleaner match cards, clear prize pools, and direct WhatsApp instructions instead of messy payment gateway friction.",
   },
   {
     icon: Users,
-    title: "Captain-Based Squad Flow",
-    copy: "One captain pays for the full 4-player team, the second captain fills the other side, and the room becomes a real 4v4 match.",
+    title: "Captain Based Squad Flow",
+    copy: "For Clash Squad rooms, captain one locks the first 4 seats, captain two locks the other 4 seats, and both teams are confirmed manually through WhatsApp.",
   },
   {
     icon: Shield,
-    title: "Verified Player Records",
-    copy: "Wallet moves, registrations, and winner updates are tracked so the platform feels trustworthy for real players.",
+    title: "Simple Manual Entry",
+    copy: "Players join the community, follow the channel, DM the admin personally, and confirm their slot with direct UPI payment before the room goes live.",
   },
   {
-    icon: Ticket,
-    title: "Coin-to-Coupon Store",
-    copy: "Players can convert coins into rupee coupons with clear values that feel like a real esports wallet perk.",
+    icon: MessageCircle,
+    title: "Community First Support",
+    copy: "Announcements, room details, appeals, and support now live around the EBI WhatsApp community so players know exactly where to go.",
   },
 ];
 
 const heroStats = [
-  { label: "Formats", value: "Solo and 4v4 Clash Squad" },
-  { label: "Captain Flow", value: "4 seats locked per payment" },
-  { label: "Rewards", value: "Wallet, coupons, leaderboard" },
+  { label: "Match Types", value: "Solo and 4v4 Clash Squad" },
+  { label: "Entry Flow", value: "WhatsApp and direct UPI" },
+  { label: "Community", value: "One hub for rooms and support" },
 ];
 
 const matchHighlights = [
   {
-    title: "Custom Rooms",
-    subtitle: "Free Fire players",
-    detail: "50-slot solo rooms with clean start gates and rule-based reward copy.",
-    icon: Crosshair,
-  },
-  {
-    title: "Cash Matches",
-    subtitle: "Top 5 payout view",
-    detail: "Paid solo tournaments display entry fee and payout ladder in simple INR language.",
-    icon: Coins,
+    title: "Paid Solo Rooms",
+    subtitle: "Manual confirmation",
+    detail: "Join the community, DM the admin, confirm your UPI payment, and lock your slot for the next solo room.",
+    icon: Trophy,
   },
   {
     title: "Clash Squad",
-    subtitle: "2 captains, 2 teams",
-    detail: "The first captain creates team one, the second captain creates team two, and the room fills as 8 total seats.",
+    subtitle: "2 captains, 8 seats",
+    detail: "One captain fills the first 4 seats, the second captain fills the other 4 seats, and the room becomes a full 4v4 battle.",
     icon: Users,
+  },
+  {
+    title: "Community Drops",
+    subtitle: "Fast updates",
+    detail: "Room announcements, last-minute changes, and support replies are pushed through the EBI WhatsApp community first.",
+    icon: CalendarClock,
   },
 ];
 
@@ -113,7 +105,9 @@ export default function Home() {
                   </Link>
                 </Button>
                 <Button asChild size="lg" variant="outline" className="h-14 rounded-full border-white/10 bg-card/45 hover:bg-white/5">
-                  <Link href="/coupons">Open Coupon Store</Link>
+                  <a href={EBI_WHATSAPP_COMMUNITY_URL} target="_blank" rel="noreferrer">
+                    Join WhatsApp Community
+                  </a>
                 </Button>
               </motion.div>
 
@@ -144,15 +138,15 @@ export default function Home() {
                   <h2 className="mt-2 text-3xl font-black uppercase tracking-[0.04em]">Queue Overview</h2>
                 </div>
                 <div className="rounded-full border border-secondary/25 bg-secondary/10 px-3 py-1 text-xs font-bold uppercase tracking-[0.2em] text-secondary">
-                  Live Setup
+                  Community Live
                 </div>
               </div>
 
               <div className="mt-5 space-y-4">
-                <PanelMetric label="Solo Cash Room" value="Top 5 payout board" icon={Trophy} />
-                <PanelMetric label="Coupon Values" value="1000 coins = Rs. 10" icon={Ticket} />
-                <PanelMetric label="Clash Squad" value="Captain pays for 4 seats" icon={Users} />
-                <PanelMetric label="Match Control" value="2 captains create 2 teams" icon={CalendarClock} />
+                <PanelMetric label="Solo Rooms" value="WhatsApp confirmed entry" icon={Trophy} />
+                <PanelMetric label="Clash Squad" value="Captain 1 then captain 2" icon={Users} />
+                <PanelMetric label="Support" value="DM admin directly" icon={MessageCircle} />
+                <PanelMetric label="Room Control" value="Announcements in community" icon={CalendarClock} />
               </div>
             </motion.div>
           </div>
@@ -163,10 +157,10 @@ export default function Home() {
         <div className="mb-8 flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
           <div>
             <p className="text-xs uppercase tracking-[0.28em] text-secondary/80">Platform Upgrade</p>
-            <h2 className="mt-2 text-4xl font-black uppercase tracking-[0.04em]">Built to feel tournament-ready</h2>
+            <h2 className="mt-2 text-4xl font-black uppercase tracking-[0.04em]">Built to feel tournament ready</h2>
           </div>
           <p className="max-w-2xl text-sm leading-7 text-muted-foreground">
-            The goal is simple: less fake sci-fi styling, more structure that looks like players can actually trust it for daily rooms and cash matches.
+            The goal is simple: cleaner match cards, direct player communication, and a manual entry flow that players can actually understand from the first click.
           </p>
         </div>
 

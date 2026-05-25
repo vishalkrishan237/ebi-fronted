@@ -2,7 +2,7 @@ import React from "react";
 import { useGetLeaderboard, useGetMe } from "@workspace/api-client-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Trophy, Coins, Medal, Crown, Award } from "lucide-react";
+import { Trophy, Medal, Crown, Award } from "lucide-react";
 import { motion } from "framer-motion";
 
 function RankBadge({ rank }: { rank: number }) {
@@ -42,7 +42,7 @@ export default function LeaderboardPage() {
         <Trophy className="h-8 w-8 text-primary" />
         <div>
           <h1 className="text-3xl font-black tracking-tight">Leaderboard</h1>
-          <p className="text-muted-foreground">Top players ranked by tournament prize earnings.</p>
+          <p className="text-muted-foreground">Top players ranked by tournament wins and overall prize record.</p>
         </div>
       </div>
 
@@ -99,22 +99,12 @@ export default function LeaderboardPage() {
                         </p>
                         <p className="font-mono font-bold">{entry.wins}</p>
                       </div>
-                      <div className="text-right hidden sm:block">
-                        <p className="text-[10px] uppercase tracking-wider text-muted-foreground">
-                          Balance
-                        </p>
-                        <p className="font-mono font-bold flex items-center gap-1 justify-end">
-                          {entry.coinBalance}
-                          <Coins className="h-3 w-3 text-secondary" />
-                        </p>
-                      </div>
                       <div className="text-right">
                         <p className="text-[10px] uppercase tracking-wider text-muted-foreground">
-                          Prize won
+                          Prize record
                         </p>
-                        <p className="font-mono font-black text-lg text-primary flex items-center gap-1 justify-end">
+                        <p className="font-mono font-black text-lg text-primary">
                           {entry.totalPrize}
-                          <Coins className="h-4 w-4" />
                         </p>
                       </div>
                     </div>

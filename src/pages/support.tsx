@@ -39,7 +39,7 @@ export default function SupportPage() {
       "Attachments I can provide:",
       "- Result screenshots",
       "- Lobby screenshots",
-      "- Payment or coupon references",
+      "- UPI payment reference if relevant",
     ].join("\n");
 
     return `mailto:${SUPPORT_EMAIL}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
@@ -56,14 +56,14 @@ export default function SupportPage() {
           title: "1. Contact channel",
           body: [
             `Primary support email: ${SUPPORT_EMAIL}`,
-            "When you contact support, include your username, registered email, Free Fire UID, match name, and screenshots or payment references if your issue relates to a room result or transaction.",
+            "When you contact support, include your username, registered email, Free Fire UID, match name, and screenshots or UPI payment references if your issue relates to a room result or payment confirmation.",
           ],
         },
         {
           title: "2. Appeal requests",
           body: [
             "If you believe a room result, ban, refund decision, or winner declaration was wrong, send an appeal with a clear timeline of what happened and attach proof. Appeals without evidence may be closed quickly.",
-            "Appeals should focus on facts: room ID or match name, your UID, payment or coupon reference if relevant, and screenshots of custom-room results or admin instructions.",
+            "Appeals should focus on facts: room ID or match name, your UID, UPI payment reference if relevant, and screenshots of custom-room results or admin instructions.",
           ],
         },
         {
@@ -76,7 +76,7 @@ export default function SupportPage() {
         {
           title: "4. Issues we can review",
           body: [
-            "Examples include account access problems, UID mismatch, cancelled rooms, winner disputes, coupon redemption questions, fair-play complaints, and reward or refund review requests.",
+            "Examples include account access problems, UID mismatch, cancelled rooms, winner disputes, manual payment confirmation issues, fair-play complaints, and refund review requests.",
             "Support cannot promise a specific outcome, but it can confirm whether a case qualifies for correction, refund review, payout review, or account action.",
           ],
         },
@@ -142,7 +142,7 @@ export default function SupportPage() {
                 id="appeal-description"
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                placeholder="Explain what happened, what time it happened, and what result or payment issue you want reviewed."
+                placeholder="Explain what happened, what time it happened, and what result or manual payment issue you want reviewed."
                 className="min-h-32"
               />
             </div>

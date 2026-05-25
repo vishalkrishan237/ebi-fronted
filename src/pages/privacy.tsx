@@ -10,15 +10,15 @@ export default function PrivacyPage() {
         {
           title: "1. Information we collect",
           body: [
-            "We may collect account information such as username, email address, Free Fire UID, referral code usage, wallet activity, match history, coupon activity, and support messages you send to us.",
-            "When payment features are enabled, payment partner references, order IDs, settlement status, and fraud or verification records may also be stored to confirm entry status and investigate disputes.",
+            "We may collect account information such as username, email address, Free Fire UID, match history, support messages you send to us, and records tied to room participation.",
+            "For paid rooms confirmed manually, UPI payment references, settlement notes, and verification records may also be stored to confirm entry status and investigate disputes.",
           ],
         },
         {
           title: "2. Why we use your data",
           body: [
-            "Your data is used to create player accounts, register tournament entries, confirm eligibility, record match participation, distribute rewards or refunds, respond to support tickets, and protect the platform from abuse.",
-            "We may also use operational logs, payment-status records, and account history to investigate cheating, impersonation, fake payment claims, multiple-account abuse, or prize disputes.",
+            "Your data is used to create player accounts, register tournament entries, confirm eligibility, record match participation, respond to support tickets, and protect the platform from abuse.",
+            "We may also use operational logs, manual payment-status records, and account history to investigate cheating, impersonation, fake payment claims, multiple-account abuse, or prize disputes.",
           ],
         },
         {
@@ -31,8 +31,8 @@ export default function PrivacyPage() {
         {
           title: "4. Data retention",
           body: [
-            "We retain tournament, wallet, and payment records for operational, support, fraud-prevention, and compliance purposes. Some data may remain in backups or audit logs even after a profile is no longer actively used.",
-            "If you ask us to review or remove account information, we may keep the minimum records necessary to detect abuse, settle disputes, or comply with legal and payment obligations.",
+            "We retain tournament and payment-related records for operational, support, fraud-prevention, and compliance purposes. Some data may remain in backups or audit logs even after a profile is no longer actively used.",
+            "If you ask us to review or remove account information, we may keep the minimum records necessary to detect abuse, settle disputes, or comply with legal obligations.",
           ],
         },
         {
@@ -55,7 +55,7 @@ export default function PrivacyPage() {
           <p className="text-xs uppercase tracking-[0.24em] text-muted-foreground">Data handling</p>
           <h2 className="mt-2 text-2xl font-black uppercase tracking-[0.03em]">Tournament integrity first</h2>
           <p className="mt-4 text-sm leading-7 text-muted-foreground">
-            Match logs, wallet history, and entry records help us resolve disputes, confirm winners, and block duplicate-account abuse. That is a big part of why we keep operational history.
+            Match logs, entry records, and manual payment references help us resolve disputes, confirm winners, and block duplicate-account abuse. That is a big part of why we keep operational history.
           </p>
         </>
       }
