@@ -231,6 +231,36 @@ export type AdminPaymentsPayload = {
   payments: AdminPaymentEntry[];
 };
 
+export type AdminManualMatchRegistrationPayload = {
+  ok: true;
+  match: {
+    id: number;
+    name: string;
+    description: string;
+    type: "paid" | "free";
+    entryFee: number;
+    entryFeeInr: number;
+    prize: number;
+    slots: number;
+    slotsTaken: number;
+    minPlayersToStart: number;
+    teamSize: number;
+    mode: string;
+    isCaptainEntryOnly: boolean;
+    payoutPerKill: number;
+    booyahBonus: number;
+    status: string;
+    winnerUserId: number | null;
+    startsAt: string;
+    createdAt: string;
+  };
+  player: {
+    id: number;
+    username: string;
+    freeFireUid: string;
+  };
+};
+
 export function useWatchRewardVideos(enabled = true) {
   return useQuery({
     queryKey: ["watch-reward-videos"],
@@ -379,5 +409,17 @@ export function useAdminPayments(enabled = true) {
     queryKey: ["admin-payments"],
     queryFn: () => apiFetch<AdminPaymentsPayload>("/api/admin/payments"),
     enabled,
+  });
+}
+
+export function useAdminManualMatchRegistration() {
+  return useMutation({
+    mutationFn: (input: { matchId: number; freeFireUid: string }) =>
+      apiFetch<AdminManualMatchRegistrationPayload>(`/api/admin/matches/${input.matchId}/register-player`, {
+        method: "POST",
+        body: JSON.stringify({
+          freeFireUid: input.freeFireUid,
+        }),
+      }),
   });
 }

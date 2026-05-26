@@ -29,7 +29,7 @@ import {
   getGetAdminLogsQueryKey,
 } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
-import { useAdminPayments, useBootstrapEbiMatches } from "@/lib/platform-api";
+import { useAdminManualMatchRegistration, useAdminPayments, useBootstrapEbiMatches } from "@/lib/platform-api";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
@@ -60,6 +60,7 @@ import {
   ScrollText,
   LayoutDashboard,
   ReceiptIndianRupee,
+  UserPlus,
 } from "lucide-react";
 
 const CreateMatchBodySchema = z.object({
@@ -98,6 +99,11 @@ const UpdateMatchBodySchema = z.object({
   slots: z.number().min(1).optional(),
   minPlayersToStart: z.number().min(1).optional(),
   startsAt: z.string().optional(),
+});
+
+const ManualRegisterBodySchema = z.object({
+  matchId: z.number().min(1),
+  freeFireUid: z.string().min(6).max(15).regex(/^[0-9]+$/),
 });
 
 export default function AdminPage() {
@@ -209,6 +215,7 @@ function MatchesSection() {
   const { toast } = useToast();
   const createMutation = useCreateMatch();
   const bootstrapMutation = useBootstrapEbiMatches();
+  const registerPlayerMutation = useAdminManualMatchRegistration();
   const deleteMutation = useDeleteMatch();
   const startMutation = useStartMatch();
   const endMutation = useEndMatch();
@@ -226,6 +233,14 @@ function MatchesSection() {
       prize: 0,
       slots: 50,
       startsAt: new Date(Date.now() + 86400000).toISOString().slice(0, 16),
+    },
+  });
+
+  const manualRegisterForm = useForm({
+    resolver: zodResolver(ManualRegisterBodySchema),
+    defaultValues: {
+      matchId: 0,
+      freeFireUid: "",
     },
   });
 
@@ -251,6 +266,37 @@ function MatchesSection() {
       },
       onError: (e: any) => toast({ variant: "destructive", title: "Error", description: e.message }),
     });
+  };
+
+  const onManualRegister = (data: { matchId: number; freeFireUid: string }) => {
+    registerPlayerMutation.mutate(
+      {
+        matchId: Number(data.matchId),
+        freeFireUid: data.freeFireUid.trim(),
+      },
+      {
+        onSuccess: (result) => {
+          toast({
+            title: "Player registered",
+            description: `${result.player.username} added to ${result.match.name}.`,
+          });
+          manualRegisterForm.reset({ matchId: data.matchId, freeFireUid: "" });
+          queryClient.invalidateQueries({ queryKey: getListMatchesQueryKey() });
+          queryClient.invalidateQueries({ queryKey: getGetMatchQueryKey(result.match.id) });
+          queryClient.invalidateQueries({ queryKey: getGetAdminStatsQueryKey() });
+          queryClient.invalidateQueries({ queryKey: getGetAdminLogsQueryKey() });
+          queryClient.invalidateQueries({ queryKey: getGetProfileQueryKey() });
+          queryClient.invalidateQueries({ queryKey: getGetMeQueryKey() });
+        },
+        onError: (error: any) => {
+          toast({
+            variant: "destructive",
+            title: "Manual register failed",
+            description: error.message,
+          });
+        },
+      },
+    );
   };
 
   const handleStart = (id: number) => {
@@ -308,6 +354,73 @@ function MatchesSection() {
                 {bootstrapMutation.isPending ? "Syncing..." : "Bootstrap EBI Matches"}
               </Button>
             </div>
+          </div>
+          <div className="mb-5 rounded-xl border border-secondary/20 bg-secondary/10 p-4">
+            <div className="mb-4">
+              <div className="font-bold flex items-center gap-2">
+                <UserPlus className="h-4 w-4" />
+                Manual player registration
+              </div>
+              <div className="text-sm text-muted-foreground">
+                After a player pays you personally, select the match, enter their Free Fire UID, and register them manually.
+              </div>
+            </div>
+
+            <Form {...manualRegisterForm}>
+              <form onSubmit={manualRegisterForm.handleSubmit(onManualRegister)} className="grid gap-4 md:grid-cols-[1.2fr_1fr_auto] md:items-end">
+                <FormField
+                  control={manualRegisterForm.control}
+                  name="matchId"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Match</FormLabel>
+                      <Select
+                        onValueChange={(value) => field.onChange(Number(value))}
+                        value={field.value > 0 ? String(field.value) : undefined}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Choose a match" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {!matches || matches.length === 0 ? (
+                            <SelectItem value="0" disabled>No matches available</SelectItem>
+                          ) : (
+                            matches
+                              .filter((match) => match.status === "open" || match.status === "live")
+                              .map((match) => (
+                                <SelectItem key={match.id} value={String(match.id)}>
+                                  #{match.id} — {match.name} ({match.slotsTaken}/{match.slots})
+                                </SelectItem>
+                              ))
+                          )}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={manualRegisterForm.control}
+                  name="freeFireUid"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Player Free Fire UID</FormLabel>
+                      <FormControl>
+                        <Input {...field} placeholder="Enter player UID" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <Button type="submit" disabled={registerPlayerMutation.isPending}>
+                  {registerPlayerMutation.isPending ? "Registering..." : "Register Player"}
+                </Button>
+              </form>
+            </Form>
           </div>
           <Form {...createForm}>
             <form onSubmit={createForm.handleSubmit(onCreate)} className="space-y-4">
