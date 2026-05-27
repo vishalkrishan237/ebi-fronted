@@ -15,7 +15,7 @@ import {
   getLobbyPrizeText,
   getLobbyPrizeTitle,
   getLobbySummaryText,
-  isPaidSquadCashMatch,
+  isTwoVTwoLoneWolfMatch,
 } from "@/lib/match-display";
 import { EBI_WHATSAPP_COMMUNITY_URL } from "@/lib/community";
 
@@ -34,7 +34,7 @@ export default function LobbyPage() {
         <div>
           <h1 className="text-3xl font-black tracking-tight">Tournament Lobby</h1>
           <p className="mt-2 max-w-2xl text-muted-foreground">
-            Every room is confirmed through the EBI WhatsApp community. Join the community, follow the channel, then DM the admin personally to confirm your slot and UPI payment.
+            Every room is confirmed through the EBI WhatsApp community. Join the community, follow the channel, then DM the admin personally to confirm your slot. Paid rooms need manual UPI confirmation, and free rooms still need admin slot approval.
           </p>
         </div>
 
@@ -57,19 +57,19 @@ export default function LobbyPage() {
               <p className="text-xs uppercase tracking-[0.24em] text-muted-foreground">Manual entry flow</p>
               <h2 className="mt-2 text-3xl font-black uppercase tracking-[0.03em]">WhatsApp first, match next</h2>
               <p className="mt-3 max-w-3xl text-sm leading-7 text-muted-foreground">
-                Paid rooms are handled manually for now. You join the community, check the channel updates, DM the admin with your username and Free Fire UID, then confirm payment on UPI before room details are shared.
+                Room entries are handled manually for now. You join the community, check the channel updates, DM the admin with your username and Free Fire UID, then confirm payment on UPI for paid rooms before room details are shared.
               </p>
             </div>
           </div>
 
           <div className="mt-6 grid gap-3 md:grid-cols-3">
-            <InfoStrip label="Solo rooms" value="Manual paid entry" icon={Trophy} />
+            <InfoStrip label="Solo rooms" value="Free and paid slots" icon={Trophy} />
             <InfoStrip label="Clash Squad" value="2 captains lock 8 seats" icon={Users} />
             <InfoStrip label="Support" value="WhatsApp DM confirmation" icon={ShieldCheck} />
           </div>
         </div>
 
-        <CommunityAccessCard summary="Use the EBI WhatsApp community for every room. Follow the channel, DM the admin, pay manually on UPI, and wait for your slot confirmation before match time." />
+        <CommunityAccessCard summary="Use the EBI WhatsApp community for every room. Follow the channel, DM the admin, pay manually on UPI for paid rooms, and wait for your slot confirmation before match time." />
       </div>
 
       {isLoading ? (
@@ -99,7 +99,9 @@ export default function LobbyPage() {
                 <div className="h-2 w-full bg-gradient-to-r from-primary/50 to-secondary/50" />
                 <CardContent className="flex-1 p-6">
                   <div className="mb-4 flex items-start justify-between">
-                    <Badge className="font-bold uppercase tracking-wider">Paid</Badge>
+                    <Badge className="font-bold uppercase tracking-wider">
+                      {match.type === "free" ? "Free" : "Paid"}
+                    </Badge>
                     <Badge variant={match.status === "open" ? "outline" : "destructive"} className="border-white/10">
                       {match.status}
                     </Badge>
@@ -155,10 +157,16 @@ export default function LobbyPage() {
                         {match.mode} {match.teamSize > 1 ? `${match.teamSize}v${match.teamSize}` : ""}
                       </span>
                     </div>
-                    {isPaidSquadCashMatch(match) && (
+                    {match.isCaptainEntryOnly && (
                       <div className="flex items-center justify-between rounded-md bg-background/50 p-2">
                         <span>Captain Flow</span>
                         <span className="font-medium text-foreground">2 captains x 4 seats</span>
+                      </div>
+                    )}
+                    {isTwoVTwoLoneWolfMatch(match) && (
+                      <div className="flex items-center justify-between rounded-md bg-background/50 p-2">
+                        <span>Room Style</span>
+                        <span className="font-medium text-foreground">2 teams x 2 slots</span>
                       </div>
                     )}
                   </div>

@@ -12,7 +12,8 @@ import {
   getLobbyEntryFeeText,
   getLobbyPrizeSubtext,
   getLobbyPrizeText,
-  isPaidSquadCashMatch,
+  isFreeRulesMatch,
+  isTwoVTwoLoneWolfMatch,
 } from "@/lib/match-display";
 import { EBI_WHATSAPP_COMMUNITY_URL } from "@/lib/community";
 
@@ -36,7 +37,8 @@ export default function MatchDetailsPage() {
     );
   }
 
-  const isSquadFlow = isPaidSquadCashMatch(match) || match.isCaptainEntryOnly;
+  const isCaptainSquadFlow = Boolean(match.isCaptainEntryOnly);
+  const isTwoVTwoFlow = isTwoVTwoLoneWolfMatch(match);
 
   return (
     <div className="container mx-auto max-w-6xl px-4 py-8">
@@ -57,7 +59,9 @@ export default function MatchDetailsPage() {
 
             <div className="relative z-10 flex min-h-[320px] flex-col justify-end p-8 md:p-12">
               <div className="mb-4 flex gap-2">
-                <Badge className="px-3 py-1 text-sm font-bold uppercase tracking-wider">Paid</Badge>
+                <Badge className="px-3 py-1 text-sm font-bold uppercase tracking-wider">
+                  {match.type === "free" ? "Free" : "Paid"}
+                </Badge>
                 <Badge variant={match.status === "completed" ? "destructive" : "outline"} className="bg-background/50 px-3 py-1 text-sm backdrop-blur-md">
                   {match.status}
                 </Badge>
@@ -83,11 +87,11 @@ export default function MatchDetailsPage() {
             <CardHeader className="border-b border-white/5">
               <CardTitle className="flex items-center gap-2">
                 <Users className="h-5 w-5 text-primary" />
-                {isSquadFlow ? "Registered Teams" : `Participants (${match.participants.length})`}
+                {isCaptainSquadFlow ? "Registered Teams" : `Participants (${match.participants.length})`}
               </CardTitle>
             </CardHeader>
             <CardContent className="p-0">
-              {isSquadFlow ? (
+              {isCaptainSquadFlow ? (
                 !match.squads || match.squads.length === 0 ? (
                   <div className="p-12 text-center text-muted-foreground">
                     No captain has confirmed a team yet. The first captain fills 4 seats after manual WhatsApp and UPI confirmation.
@@ -185,20 +189,35 @@ export default function MatchDetailsPage() {
                     <p>2. Follow the channel updates so you do not miss room details and deadlines.</p>
                     <p>
                       3. DM the admin personally with your username, Free Fire UID, and match name.
-                      {isSquadFlow
+                      {isCaptainSquadFlow
                         ? " Captains should also send their squad name and 3 teammate UIDs."
+                        : isTwoVTwoFlow
+                          ? " Lone Wolf pairs should send both player UIDs together."
                         : ""}
                     </p>
-                    <p>4. Pay manually on UPI after the admin confirms your slot.</p>
+                    <p>
+                      4. {isFreeRulesMatch(match)
+                        ? "Wait for the admin to confirm your free-entry slot in WhatsApp."
+                        : "Pay manually on UPI after the admin confirms your slot."}
+                    </p>
                     <p>5. Wait for your room confirmation before match time.</p>
                   </div>
                 </div>
 
-                {isSquadFlow && (
+                {isCaptainSquadFlow && (
                   <div className="rounded-2xl border border-secondary/20 bg-secondary/10 p-4 text-sm text-muted-foreground">
                     <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Clash Squad captain note</p>
                     <p className="mt-2">
                       Captain 1 pays and locks the first 4 seats. Captain 2 pays next and locks the other 4 seats. One Clash Squad room becomes active once both captains are confirmed.
+                    </p>
+                  </div>
+                )}
+
+                {isTwoVTwoFlow && (
+                  <div className="rounded-2xl border border-secondary/20 bg-secondary/10 p-4 text-sm text-muted-foreground">
+                    <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">2v2 Lone Wolf note</p>
+                    <p className="mt-2">
+                      This room has 4 total slots only. Send both player UIDs together in WhatsApp so the admin can lock your 2-player side before the room fills.
                     </p>
                   </div>
                 )}
@@ -209,7 +228,7 @@ export default function MatchDetailsPage() {
                     Manual confirmation is active
                   </div>
                   <p className="mt-2 text-muted-foreground">
-                    Payment gateway onboarding is paused, so every slot is approved manually through the WhatsApp community and direct UPI confirmation.
+                    Payment gateway onboarding is paused, so every slot is approved manually through the WhatsApp community and direct admin confirmation.
                   </p>
                 </div>
 
